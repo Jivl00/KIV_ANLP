@@ -1,2 +1,2 @@
-WANDB_PROJECT = "anlp-2024_<surname>_<name>"
+WANDB_PROJECT = "anlp-2024_kimlova_vladimira"
 WANDB_ENTITY = "anlp2024"
