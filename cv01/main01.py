@@ -165,7 +165,7 @@ def main(config: dict):
 
             # print(f"e{epoch} b{batch_idx} s{batch_idx * BATCH_SIZE}]\t"
             #       f"Loss: {loss.item():.6f}")
-            wandb.log({"loss": loss.item()})
+            wandb.log({"train_loss": loss.item()})
 
             if batch_idx % LOG_INTERVAL == LOG_INTERVAL - 1:
                 model.eval()
