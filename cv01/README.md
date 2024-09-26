@@ -23,18 +23,28 @@ Complete missing parts and design clear interface for experimenting.
 
 ### Dataset Analysis **[1pt]**
 Create histogram of classes in the dataset. 
-
-__MISSING__ 
+![img.png](img.png)
 
 
 ### Baseline analysis **[1.5pt]**
 How would look accucary metric for **random model** and **majority class model**(returns only majority class as an output)
 
-__MISSING__ 
+_For the random model, the accuracy would be approximately 1/number_of_classes, thus approximately 0.1 since the classes are balanced._
+
+_For the majority class model, the accuracy would be the number of samples of the majority class divided by the total number of samples.
+The number of samples of the majority class is 1135, so the accuracy would be 1135/10000 = 0.1135 on the test dataset._
+
+For the implementation see the code in the file `random_and_majority_model.py`.
 
 Is there any drawback? Can we use something better, why?
 
-__MISSING__ 
+_The drawback of the majority class model is that it is not able to predict any other class than the majority class. 
+Thus not providing much information about the data.
+Same with the random model, it doesn't provide any useful information about the data.
+However, they can serve as a good baseline for the model to beat._
+
+_Pretty much any model would be better than these two models, as long as it takes the features into account._
+
 
 1. Implement missing fragments in template main01.py
 2. Implement 3-layer MLP with ReLU activation function **CF#Dense** 
