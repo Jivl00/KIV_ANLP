@@ -73,13 +73,11 @@ https://metavo.metacentrum.cz/
 Draw parallel coordinate chart with all tunned hyper parameters
 
 1. Show all your runs **[0.5pt]**
-
-_MISSING_
+![W&B Chart 28. 9. 2024 13_51_18.svg](W%26B%20Chart%2028.%209.%202024%2013_51_18.svg)
 
 2. Show only runs better than random baseline. **[0.5pt]**
-
-_MISSING_
-
+![W&B Chart 28. 9. 2024 13_59_35.svg](W%26B%20Chart%2028.%209.%202024%2013_59_35.svg)
+_- used random model accuracy as a baseline (10%)_
 
 ## Table of my results **[1pt]**
 1. show 2 best HP configuration for dense and cnn model 
