@@ -86,14 +86,14 @@ _- models with accuracy higher than 90% shown_
 2. add random and majority class models into the result table
 3. mark as bold in the table
 
-| model    |    dp |       lr | optimizer   | accuracy      |
-|:---------|------:|---------:|:------------|:--------------|
-| dense    |   0   |   0.001  | adam        | **96.95 +- 1.67** |
-| dense    |   0.3 |   0.001  | adam        | **96.83 +- 1.60** |
-| cnn      |   0   |   0.0001 | adam        | **98.51 +- 1.05** |
-| cnn      |   0.5 |   0.001  | adam        | **98.81 +- 0.95** |
-| random   | nan   | nan      |             | **cca 0.10**      |
-| majority | nan   | nan      |             | **cca 0.10**      |
+| model    |    dp |       lr | optimizer   | accuracy -+ 95% confidence   |
+|:---------|------:|---------:|:------------|:-----------------------------|
+| dense    |   0   |   0.001  | adam        | 96.95 +- 1.03                |
+| dense    |   0.3 |   0.001  | adam        | 96.83 +- 1.05                |
+| cnn      |   0   |   0.0001 | adam        | 98.51 +- 0.73                |
+| cnn      |   0.5 |   0.001  | adam        | 98.81 +- 0.66                |
+| random   | nan   | nan      |             | **cca 0.10**                 |
+| majority | nan   | nan      |             | **cca 0.10**                 |
 
 ## Present all konvergent runs **[0.5pt]**
 _MISSING_
