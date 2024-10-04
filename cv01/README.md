@@ -95,11 +95,33 @@ _- models with accuracy higher than 90% shown_
 | random   | nan   | nan      |             | **cca 0.10**                 |
 | majority | nan   | nan      |             | **cca 0.10**                 |
 
+There weren't exactly 5 runs for each configuration, but concretely 10 9 8 8.
+
 ## Present all konvergent runs **[0.5pt]**
-_MISSING_
+![W&B Chart 4. 10. 2024 16_27_54.svg](W%26B%20Chart%204.%2010.%202024%2016_27_54.svg)
+Not all runs are shown, only the ones with accuracy higher than 99% - approximately 50 runs.
+Most of those runs (45) are with the cnn model.
+
+One of the best models is morning-sound-761 with the cnn model, lr=0.0001, dp=0, optimizer=adam, test accuracy=100.
+![W&B Chart 4. 10. 2024 17_09_59.svg](W%26B%20Chart%204.%2010.%202024%2017_09_59.svg)
+
 
 ## Present all divergent runs **[0.5pt]**
-_MISSING_
+![W&B Chart 4. 10. 2024 17_15_29.svg](W%26B%20Chart%204.%2010.%202024%2017_15_29.svg)
+Above about 50 runs with accuracy lower than 20% are shown.
+What is interesting is that there are many models with accuracy around 10% - the random model and majority model accuracy.
+Therefore it is possible that these models have similar behaviour to the random model or majority model.
+Another interesting behaviour is that there were some models that had at some point accuracy above 10% but then it dropped to 10%,
+such as dark-capybara-590 and still-capybara-743.
+![W&B Chart 4. 10. 2024 17_15_29(1).svg](W%26B%20Chart%204.%2010.%202024%2017_15_29%281%29.svg)
+This accuracy decrease can generally be seen for all dense models.
+There are also a few models at the bottom with low accuracy but a good accuracy trend, maybe they just need more epochs to reach a higher accuracy.
+![W&B Chart 4. 10. 2024 17_15_29(2).svg](W%26B%20Chart%204.%2010.%202024%2017_15_29%282%29.svg)
+If grouped by learning rate, it can be seen that the models with learning rate 0.00001 are those slowly learning models, so 
+maybe with bigger learning rate they would reach a higher accuracy faster.
+The models with learning rate 0.0001 are probably the ones with decreasing accuracy, as mentioned before.
+Maybe these models are overfitting the data.
+
 
 ## Discussion **[1pt]**
 - Discuss the results. 
