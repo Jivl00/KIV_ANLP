@@ -78,14 +78,22 @@ Draw parallel coordinate chart with all tunned hyper parameters
 2. Show only runs better than random baseline. **[0.5pt]**
 ![W&B Chart 28. 9. 2024 13_59_35.svg](W%26B%20Chart%2028.%209.%202024%2013_59_35.svg)
 _- used random model accuracy as a baseline (10%)_
-
+![W&B Chart 4. 10. 2024 14_27_12.svg](W%26B%20Chart%204.%2010.%202024%2014_27_12.svg)
+_- models with accuracy higher than 90% shown_
 ## Table of my results **[1pt]**
 1. show 2 best HP configuration for dense and cnn model 
 (both configurations run 5 times and add confidence interval to the table)
 2. add random and majority class models into the result table
 3. mark as bold in the table
 
-_MISSING_
+| model    |    dp |       lr | optimizer   | accuracy      |
+|:---------|------:|---------:|:------------|:--------------|
+| dense    |   0   |   0.001  | adam        | **96.95 +- 1.67** |
+| dense    |   0.3 |   0.001  | adam        | **96.83 +- 1.60** |
+| cnn      |   0   |   0.0001 | adam        | **98.51 +- 1.05** |
+| cnn      |   0.5 |   0.001  | adam        | **98.81 +- 0.95** |
+| random   | nan   | nan      |             | **cca 0.10**      |
+| majority | nan   | nan      |             | **cca 0.10**      |
 
 ## Present all konvergent runs **[0.5pt]**
 _MISSING_
