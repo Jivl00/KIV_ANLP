@@ -65,7 +65,7 @@ data = {
                                       f"{np.mean(best_dense_accs2):.2f} +- {1.96 * np.std(best_dense_accs2) / np.sqrt(len(best_dense_accs2)):.2f}",
                                       f"{np.mean(best_cnn_accs1):.2f} +- {1.96 * np.std(best_cnn_accs1) / np.sqrt(len(best_cnn_accs1)):.2f}",
                                       f"{np.mean(best_cnn_accs2):.2f} +- {1.96 * np.std(best_cnn_accs2) / np.sqrt(len(best_cnn_accs2)):.2f}",
-                 "cca 0.10", "cca 0.10"]
+                 "cca 10.00", "cca 11.00"]
 }
 df = pd.DataFrame(data)
 # make last column bold
