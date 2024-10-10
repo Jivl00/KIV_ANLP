@@ -62,7 +62,6 @@ Present mean and std of the dataset.
 | Train   | 2.44669 | 2.11928 |
 | Test    | 2.65509 | 1.78368 |
 
-
 ### Baseline analysis **[2pt]**
 
 What would the loss of a model returning a random value between 0 and 6 uniformly look like?
@@ -71,19 +70,18 @@ What would the loss of a model returning best prior (most probable output) look 
 
 _Well that is highly dependent on the loss function used._
 
-| Model    | Loss Type   |   Loss Value |
-|:---------|:------------|-------------:|
-| Random   | MSE         |      6.49034 |
-| Random   | MAE         |      2.08383 |
-| Majority | MSE         |     10.3517  |
-| Majority | MAE         |      2.66    |
+| Model    | Loss Type | Loss Value |
+|:---------|:----------|-----------:|
+| Random   | MSE       |    6.49034 |
+| Random   | MAE       |    2.08383 |
+| Majority | MSE       |    10.3517 |
+| Majority | MAE       |       2.66 |
 
 _In the table above, values of MSE and MAE are calculated on the test dataset.
 For the random model 30 runs were performed and the mean value is presented. For the best prior model
 the value of 0 was chosen as the most common value in the training dataset._
 
 _MSE and MAE were chosen because the expected values in the test dataset are floating point numbers._
-
 
 ### Implement Dummy Model
 
@@ -94,7 +92,11 @@ _MSE and MAE were chosen because the expected values in the test dataset are flo
    Count occurrences of words in the datasset, and prepare a list of
    top\_n words
 
-   **CKPT\#1**
+
+   _Here I´m actually a little confused. Why are we not getting rid of punctuation and other non-word characters, or
+   lowering letters?_
+
+**CKPT\#1**
 
 2. **Prepare Word Embeddings**.
    https://drive.google.com/file/d/1MTDoyoGRhvLf15yL4NeEbpYLbcBlDZ3c/view?usp=sharing

@@ -53,14 +53,16 @@ run_id = random.randint(100_000, 999_999)
 #  top_n integer : how many most frequent words
 def dataset_vocab_analysis(texts, top_n=-1):
     counter = Counter()
-    # todo CF#1
-    #  Count occurrences of words in the data set, and prepare a list of top_n words, split words using l.split(" ")
+    #  CF#1
+    counter.update([word for l in texts for word in l.split(" ")])
+    if top_n > 0:
+        return list(dict(counter.most_common(top_n)).keys())
     return list(counter)
 
 
 #  emb_file : a source file with the word vectors
 #  top_n_words : enumeration of top_n_words for filtering the whole word vector file
-def load_ebs(emb_file, top_n_words: list, wanted_vocab_size, force_rebuild=False):
+def load_ebs(emb_file, top_n_words: list, wanted_vocab_size, force_rebuild=True):
     print("prepairing W2V...", end="")
     if os.path.exists(WORD2IDX) and os.path.exists(VECS_BUFF) and not force_rebuild:
         # CF#3
@@ -69,21 +71,36 @@ def load_ebs(emb_file, top_n_words: list, wanted_vocab_size, force_rebuild=False
             word2idx = pickle.load(idx_fd)
             vecs = pickle.load(vecs_fd)
     else:
-        print("...creting from scratch")
+        print("...creating from scratch")
 
         with open(emb_file, 'r', encoding="utf-8") as emb_fd:
             idx = 0
             word2idx = {}
             vecs = []
 
-            # todo # CF#2
+            # CF#2
             #  create map of  word->id  of top according to the given top_n_words
-            #  create a matrix as a np.array : word vecotrs
+            #  create a matrix as a np.array : word vectors
             #  vocabulary ids corresponds to vectors in the matrix
             #  Do not forget to add UNK and PAD tokens into the vocabulary.
 
-            # assert len(word2idx) > 6820
-            # assert len(vecs) == len(word2idx)
+            for idx, word in enumerate(top_n_words[:wanted_vocab_size]):
+                word2idx[word] = idx
+            word2idx[UNK] = len(word2idx)
+            word2idx[PAD] = len(word2idx)
+
+            # prune given word embeddings to the wanted_vocab_size
+            vecs = np.zeros((len(word2idx), 300))
+            for i, l in enumerate(emb_fd):
+                if i == 0:
+                    continue
+                l = l.strip().split(" ")
+                word = l[0]
+                if word in word2idx:
+                    vecs[word2idx[word]] = np.array(l[1:], dtype=np.float32)
+
+            assert len(word2idx) > 6820
+            assert len(vecs) == len(word2idx)
             pickle.dump(word2idx, open(WORD2IDX, 'wb'))
             pickle.dump(vecs, open(VECS_BUFF, 'wb'))
 
@@ -286,30 +303,31 @@ def train_model(train_dataset, test_dataset, w2v, loss_function, final_metric):
 
 
 def main(config=None):
-    wandb.init(project=wandb_config["WANDB_PROJECT"], entity=wandb_config["WANDB_ENTITY"], tags=["cv02"], config=config)
+    # wandb.init(project=wandb_config["WANDB_PROJECT"], entity=wandb_config["WANDB_ENTITY"], tags=["cv02"], config=config)
 
     with open(TRAIN_DATA, 'r', encoding="utf-8") as fd:
         train_data_texts = fd.read().split("\n")
 
     top_n_words = dataset_vocab_analysis(train_data_texts, -1)
-
+    print(len(top_n_words))
+    print(config['vocab_size'])
 
     word2idx, word_vectors = load_ebs(EMB_FILE, top_n_words, config['vocab_size'])
-
-    vectorizer = MySentenceVectorizer(word2idx, MAX_SEQ_LEN)
-
-    train_dataset = DataLoader(vectorizer, TRAIN_DATA, BATCH_SIZE)
-    test_dataset = DataLoader(vectorizer, TEST_DATA, BATCH_SIZE)
-
-    dummy_net = DummyModel(train_dataset)
-    dummy_net = dummy_net.to(device)
-
-    loss_function = torch.nn.MSELoss()
-
-    test(test_dataset, dummy_net, loss_function)
-    test(train_dataset, dummy_net, loss_function)
-
-    train_model(train_dataset, test_dataset, word_vectors, loss_function, config["final_metric"])
+    #
+    # vectorizer = MySentenceVectorizer(word2idx, MAX_SEQ_LEN)
+    #
+    # train_dataset = DataLoader(vectorizer, TRAIN_DATA, BATCH_SIZE)
+    # test_dataset = DataLoader(vectorizer, TEST_DATA, BATCH_SIZE)
+    #
+    # dummy_net = DummyModel(train_dataset)
+    # dummy_net = dummy_net.to(device)
+    #
+    # loss_function = torch.nn.MSELoss()
+    #
+    # test(test_dataset, dummy_net, loss_function)
+    # test(train_dataset, dummy_net, loss_function)
+    #
+    # train_model(train_dataset, test_dataset, word_vectors, loss_function, config["final_metric"])
 
 
 if __name__ == '__main__':
