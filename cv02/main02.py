@@ -151,7 +151,7 @@ class DataLoader():
         self.sts = []
         self.pointer = 0
         self._vectorizer = vectorizer
-        print(f"loading data from {self._data_folder} ...", end="")
+        print(f"loading data from {self._data_folder} ...")
         self.__load_from_file(self._data_folder)
 
         self.out_of_vocab = self._vectorizer.out_of_vocab_perc()
@@ -239,11 +239,17 @@ class TwoTowerModel(torch.nn.Module):
 
 
 class DummyModel(torch.nn.Module):  # predat dataset a vracet priod
-    def __init__(self, file_path):
+    def __init__(self, train_loader):
         super(DummyModel, self).__init__()
+        # for i, td in enumerate(train_loader):
+        #     self.mean_on_train = torch.mean(td['sts']).item()
+        #     break
+
+
         # todo CF#9
         #   Implement DummyModel as described in the assignment.
-        self.mean_on_train = None
+        self.mean_on_train = torch.mean(torch.tensor(train_loader.sts)).item()
+        print(f"mean_on_train: {self.mean_on_train}")
 
     def forward(self, batch):
         return torch.tensor([self.mean_on_train for _ in range(len(batch['a']))]).to(device)
@@ -258,7 +264,7 @@ def test(data_set, net, loss_function):
     with torch.no_grad():
         for i, td in enumerate(data_set):
             predicted_sts = net(td)
-            real_sts = td['sts'].to(device)
+            real_sts = torch.tensor(td['sts']).to(device)
             loss = loss_function(real_sts, predicted_sts)
             running_loss += loss.item()
             all += len(td['sts'])
@@ -348,15 +354,14 @@ def main(config=None):
     test_dataset = DataLoader(vectorizer, TEST_DATA, BATCH_SIZE)
 
 
-    #
-    # dummy_net = DummyModel(train_dataset)
-    # dummy_net = dummy_net.to(device)
-    #
-    # loss_function = torch.nn.MSELoss()
-    #
-    # test(test_dataset, dummy_net, loss_function)
-    # test(train_dataset, dummy_net, loss_function)
-    #
+    dummy_net = DummyModel(train_dataset)
+    dummy_net = dummy_net.to(device)
+
+    loss_function = torch.nn.MSELoss()
+
+    test(test_dataset, dummy_net, loss_function)
+    test(train_dataset, dummy_net, loss_function)
+
     # train_model(train_dataset, test_dataset, word_vectors, loss_function, config["final_metric"])
 
 
