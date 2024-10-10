@@ -192,9 +192,9 @@ class DataLoader():
             batch_size = len(self.a) - self.pointer
         else:
             batch_size = self._batch_size
-        batch['a'] = self.a[self.pointer:self.pointer + batch_size]
-        batch['b'] = self.b[self.pointer:self.pointer + batch_size]
-        batch['sts'] = self.sts[self.pointer:self.pointer + batch_size]
+        batch['a'] = np.array(self.a[self.pointer:self.pointer + batch_size])
+        batch['b'] = np.array(self.b[self.pointer:self.pointer + batch_size])
+        batch['sts'] = np.array(self.sts[self.pointer:self.pointer + batch_size])
         self.pointer += batch_size
 
         return batch
@@ -249,16 +249,21 @@ class DummyModel(torch.nn.Module):  # predat dataset a vracet priod
         return torch.tensor([self.mean_on_train for _ in range(len(batch['a']))]).to(device)
 
 
-# todo CF#8b
+# CF#8b
 # process whole dataset and return loss
 # save loss from each batch and divide it by all on the end.
 def test(data_set, net, loss_function):
     running_loss = 0
     all = 0
-    for i, td in enumerate(data_set):
-        predicted_sts = None
+    with torch.no_grad():
+        for i, td in enumerate(data_set):
+            predicted_sts = net(td)
+            real_sts = td['sts'].to(device)
+            loss = loss_function(real_sts, predicted_sts)
+            running_loss += loss.item()
+            all += len(td['sts'])
 
-        loss = None
+
     test_loss = running_loss / all
     return test_loss
 
@@ -279,15 +284,18 @@ def train_model(train_dataset, test_dataset, w2v, loss_function, final_metric):
     sample = 0
     x_axes = []  # vis
 
-    # todo CF#8a Implement training loop
+    # CF#8a Implement training loop
     for epoch in range(EPOCH):
         for i, td in enumerate(train_dataset):
             batch = td
             real_sts = batch['sts'].to(device)
 
-            predicted_sts = None
+            optimizer.zero_grad()
+            predicted_sts = net(batch)
 
             loss = loss_function(real_sts, predicted_sts)
+            loss.backward()
+            optimizer.step()
 
             running_loss += loss.item()
             sample += BATCH_SIZE
@@ -299,7 +307,9 @@ def train_model(train_dataset, test_dataset, w2v, loss_function, final_metric):
 
                 train_loss_arr.append(train_loss)
 
+                net.eval()
                 test_loss = test(test_dataset, net, loss_function)
+                net.train()
                 test_loss_arr.append(test_loss)
 
                 wandb.log({"test_loss": test_loss}, commit=False)
@@ -333,9 +343,11 @@ def main(config=None):
     EXPECTED = [259, 642, 249, 66, 252, 3226]
     sentence = "Podle vlády dnes není dalších otázek"
     print(vectorizer.sent2idx(sentence))
-    #
-    # train_dataset = DataLoader(vectorizer, TRAIN_DATA, BATCH_SIZE)
-    # test_dataset = DataLoader(vectorizer, TEST_DATA, BATCH_SIZE)
+
+    train_dataset = DataLoader(vectorizer, TRAIN_DATA, BATCH_SIZE)
+    test_dataset = DataLoader(vectorizer, TEST_DATA, BATCH_SIZE)
+
+
     #
     # dummy_net = DummyModel(train_dataset)
     # dummy_net = dummy_net.to(device)
