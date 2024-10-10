@@ -158,29 +158,44 @@ class DataLoader():
         self._vectorizer.reset_counter()
 
     def __load_from_file(self, file):
-        # todo CF#5
+        #  CF#5
         #  load and preprocess the data set from file into self.a self.b self.sts
         #  use vectorizer to store only ids instead of strings
         with open(file, 'r', encoding="utf-8") as fd:
             for i, l in enumerate(fd):
-                pass
+                fragments = l.strip().split("\t")
+                self.a.append(self._vectorizer.sent2idx(fragments[0]))
+                self.b.append(self._vectorizer.sent2idx(fragments[1]))
+                self.sts.append(float(fragments[2]))
 
                 # You can use this snippet for faster debuging
                 # if i == 4000:
                 #     break
 
     def __iter__(self):
-        # todo CF#7
+        #   CF#7
         #   randomly shuffle data in memory and start from begining
+        self.pointer = 0
+        zipped = list(zip(self.a, self.b, self.sts))
+        random.shuffle(zipped)
+        self.a, self.b, self.sts = zip(*zipped)
 
         self.pointer = 0
 
         return self
 
     def __next__(self):
-        # todo CF#6
+        #   CF#6
         #   Implement yielding a batches from preloaded data: self.a,  self.b, self.sts
         batch = dict()
+        if self.pointer + self._batch_size > len(self.a):
+            batch_size = len(self.a) - self.pointer
+        else:
+            batch_size = self._batch_size
+        batch['a'] = self.a[self.pointer:self.pointer + batch_size]
+        batch['b'] = self.b[self.pointer:self.pointer + batch_size]
+        batch['sts'] = self.sts[self.pointer:self.pointer + batch_size]
+        self.pointer += batch_size
 
         return batch
 
