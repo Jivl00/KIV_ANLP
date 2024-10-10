@@ -48,8 +48,10 @@ Tasks \[20+5 points in total\]
 ### Dataset Statistics **[1pt]**
 
 Create histogram of pair similarity.
+
 ![Train Pair Similarity Histogram.svg](img%2FTrain%20Pair%20Similarity%20Histogram.svg)
 ![Test Pair Similarity Histogram.svg](img%2FTest%20Pair%20Similarity%20Histogram.svg)
+
 _For the test dataset, values are rounded to whole numbers._
 
 _As you can see, the dataset is not balanced. The most common value is 0 for the training dataset and 1 for the test

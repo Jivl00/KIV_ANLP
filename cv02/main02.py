@@ -48,7 +48,6 @@ EPOCH = 7
 run_id = random.randint(100_000, 999_999)
 
 
-
 #  file_path is path to the source file for making statistics
 #  top_n integer : how many most frequent words
 def dataset_vocab_analysis(texts, top_n=-1):
@@ -57,12 +56,12 @@ def dataset_vocab_analysis(texts, top_n=-1):
     counter.update([word for l in texts for word in l.split(" ")])
     if top_n > 0:
         return list(dict(counter.most_common(top_n)).keys())
-    return list(counter)
+    return list(dict(counter.most_common()).keys())
 
 
 #  emb_file : a source file with the word vectors
 #  top_n_words : enumeration of top_n_words for filtering the whole word vector file
-def load_ebs(emb_file, top_n_words: list, wanted_vocab_size, force_rebuild=True):
+def load_ebs(emb_file, top_n_words: list, wanted_vocab_size, force_rebuild=False):
     print("prepairing W2V...", end="")
     if os.path.exists(WORD2IDX) and os.path.exists(VECS_BUFF) and not force_rebuild:
         # CF#3
@@ -107,7 +106,7 @@ def load_ebs(emb_file, top_n_words: list, wanted_vocab_size, force_rebuild=True)
     return word2idx, vecs
 
 
-# This class is used for transforming text into sequence of ids coresponding to word vectors (using dict word2idx).
+# This class is used for transforming text into sequence of ids corresponding to word vectors (using dict word2idx).
 # It also counts some usable statistics.
 class MySentenceVectorizer():
     def __init__(self, word2idx, max_seq_len):
@@ -118,13 +117,20 @@ class MySentenceVectorizer():
 
     def sent2idx(self, sentence):
         idx = []
-        # todo CF#4
+        # CF#4
         #  Transform sentence into sequence of ids using self.word2idx
         #  Keep the counters self._all_words and self._out_of_vocab up to date
         #  for checking coverage -- it is also used for testing.
+        words = sentence.split(" ")[0:self.max_seq_len]
+        for word in words:
+            self._all_words += 1
+            if word not in self.word2idx:
+                self._out_of_vocab += 1
+                idx.append(self.word2idx[UNK])
+            else:
+                idx.append(self.word2idx[word])
 
-
-        return idx
+        return idx + [self.word2idx[PAD]] * (self.max_seq_len - len(idx))
 
     def out_of_vocab_perc(self):
         return (self._out_of_vocab / self._all_words) * 100
@@ -159,11 +165,9 @@ class DataLoader():
             for i, l in enumerate(fd):
                 pass
 
-
                 # You can use this snippet for faster debuging
                 # if i == 4000:
                 #     break
-
 
     def __iter__(self):
         # todo CF#7
@@ -178,7 +182,6 @@ class DataLoader():
         #   Implement yielding a batches from preloaded data: self.a,  self.b, self.sts
         batch = dict()
 
-
         return batch
 
 
@@ -192,7 +195,6 @@ class TwoTowerModel(torch.nn.Module):
         # torch.nn.Embedding
         # torch.nn.Linear
 
-
         self.emb_layer = None
         self.emb_proj = None
 
@@ -201,7 +203,6 @@ class TwoTowerModel(torch.nn.Module):
 
         self.final_proj_1 = None
         self.final_proj_2 = None
-
 
     def _make_repre(self, idx):
         avg = None
@@ -231,7 +232,6 @@ class DummyModel(torch.nn.Module):  # predat dataset a vracet priod
 
     def forward(self, batch):
         return torch.tensor([self.mean_on_train for _ in range(len(batch['a']))]).to(device)
-
 
 
 # todo CF#8b
@@ -313,8 +313,11 @@ def main(config=None):
     print(config['vocab_size'])
 
     word2idx, word_vectors = load_ebs(EMB_FILE, top_n_words, config['vocab_size'])
-    #
-    # vectorizer = MySentenceVectorizer(word2idx, MAX_SEQ_LEN)
+
+    vectorizer = MySentenceVectorizer(word2idx, MAX_SEQ_LEN)
+    EXPECTED = [259, 642, 249, 66, 252, 3226]
+    sentence = "Podle vlády dnes není dalších otázek"
+    print(vectorizer.sent2idx(sentence))
     #
     # train_dataset = DataLoader(vectorizer, TRAIN_DATA, BATCH_SIZE)
     # test_dataset = DataLoader(vectorizer, TEST_DATA, BATCH_SIZE)
@@ -336,7 +339,5 @@ if __name__ == '__main__':
         "random_emb": True
     }
 
-
     print(my_config)
     main(my_config)
-
