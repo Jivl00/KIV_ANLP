@@ -189,13 +189,11 @@ class DataLoader():
         #   Implement yielding a batches from preloaded data: self.a,  self.b, self.sts
         batch = dict()
         if self.pointer + self._batch_size > len(self.a):
-            batch_size = len(self.a) - self.pointer
-        else:
-            batch_size = self._batch_size
-        batch['a'] = np.array(self.a[self.pointer:self.pointer + batch_size])
-        batch['b'] = np.array(self.b[self.pointer:self.pointer + batch_size])
-        batch['sts'] = np.array(self.sts[self.pointer:self.pointer + batch_size])
-        self.pointer += batch_size
+            raise StopIteration
+        batch['a'] = np.array(self.a[self.pointer:self.pointer + self._batch_size])
+        batch['b'] = np.array(self.b[self.pointer:self.pointer + self._batch_size])
+        batch['sts'] = np.array(self.sts[self.pointer:self.pointer + self._batch_size])
+        self.pointer += self._batch_size
 
         return batch
 
@@ -271,6 +269,7 @@ def test(data_set, net, loss_function):
 
 
     test_loss = running_loss / all
+    print(f"test_loss:{test_loss}")
     return test_loss
 
 
