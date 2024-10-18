@@ -10,8 +10,8 @@ if __name__ == '__main__':
     argparser.add_argument("--emb_projection", type=bool, default=True)
     argparser.add_argument("--final_metric", type=str, default="neural")
     argparser.add_argument("--vocab_size", type=int, default=20000)
-    argparser.add_argument("--batch_size", type=int, default=32)
-    argparser.add_argument("--lr_scheduler", type=str, default="plateau")
+    argparser.add_argument("--batch_size", type=int, default=10000)
+    argparser.add_argument("--lr_scheduler", type=str, default="step")
 
     my_config = vars(argparser.parse_args())
     my_config = {
@@ -22,7 +22,8 @@ if __name__ == '__main__':
         "emb_projection": True,
         "lr": 0.001,
         "optimizer": "adam",
-        "batch_size": 1000
+        "batch_size": 1000,
+        "lr_scheduler": "step"
     }
 
     main(my_config)

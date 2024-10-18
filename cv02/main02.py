@@ -333,7 +333,7 @@ def train_model(train_dataset, test_dataset, w2v, loss_function, config):
         optimizer = torch.optim.Adam(net.parameters(), lr=config["lr"])
     else:
         optimizer = torch.optim.SGD(net.parameters(), lr=config["lr"])
-    if config["scheduler"] == "step":
+    if config["lr_scheduler"] == "step":
         lr_scheduler = StepLR(optimizer, step_size=1, gamma=0.1)
     else:
         lr_scheduler = ExponentialLR(optimizer, gamma=0.1)
