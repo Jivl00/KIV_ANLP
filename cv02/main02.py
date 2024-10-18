@@ -59,6 +59,19 @@ def dataset_vocab_analysis(texts, top_n=-1):
     return list(dict(counter.most_common()).keys())
 
 
+def better_dataset_vocab_analysis(texts, top_n=-1):
+    counter = Counter()
+    for l in texts:
+        l = l.strip()
+        l = l.split("\t")
+        l = l[0] + " " + l[1]  # only first two columns, the similarity score is removed
+        for word in l.split(" "):
+            counter.update([word])
+    if top_n > 0:
+        return list(dict(counter.most_common(top_n)).keys())
+    return list(dict(counter.most_common()).keys())
+
+
 #  emb_file : a source file with the word vectors
 #  top_n_words : enumeration of top_n_words for filtering the whole word vector file
 def load_ebs(emb_file, top_n_words: list, wanted_vocab_size, force_rebuild=False):
@@ -280,7 +293,7 @@ def test(data_set, net, loss_function):
             real_sts = torch.tensor(td['sts']).to(device)
             loss = loss_function(real_sts, predicted_sts)
             running_loss += loss.item()
-            all += len(td['sts'])
+            all += 1
 
     test_loss = running_loss / all
     print(f"test_loss:{test_loss}")
@@ -354,7 +367,6 @@ def main(config=None):
 
     top_n_words = dataset_vocab_analysis(train_data_texts, -1)
     print(len(top_n_words))
-    print(config['vocab_size'])
 
     word2idx, word_vectors = load_ebs(EMB_FILE, top_n_words, config['vocab_size'])
 
