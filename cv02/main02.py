@@ -15,7 +15,7 @@ import sys
 from collections import Counter
 
 import wandb
-from torch.optim.lr_scheduler import MultiStepLR
+from torch.optim.lr_scheduler import MultiStepLR, StepLR, ExponentialLR
 
 from matplotlib import pyplot as plt
 
@@ -40,7 +40,7 @@ PAD = "<PAD>"
 
 MAX_SEQ_LEN = 50
 
-BATCH_SIZE = 1000
+# BATCH_SIZE = 1000
 MINIBATCH_SIZE = 10
 
 EPOCH = 7
@@ -74,8 +74,20 @@ def better_dataset_vocab_analysis(texts, top_n=-1):
 
 #  emb_file : a source file with the word vectors
 #  top_n_words : enumeration of top_n_words for filtering the whole word vector file
-def load_ebs(emb_file, top_n_words: list, wanted_vocab_size, force_rebuild=False):
+def load_ebs(emb_file, top_n_words: list, wanted_vocab_size, force_rebuild=False, random_emb=False):
     print("prepairing W2V...", end="")
+    if random_emb:
+        print("...random embeddings")
+        word2idx = {}
+        for i, w in enumerate(top_n_words[:wanted_vocab_size]):
+            word2idx[w] = i
+        word2idx[UNK] = len(word2idx)
+        word2idx[PAD] = len(word2idx)
+        vecs = np.random.uniform(-1, 1, (wanted_vocab_size + 2, 300))
+        vecs[word2idx[PAD]] = np.zeros(300)
+        assert len(vecs) == len(word2idx)
+
+        return word2idx, vecs
     if os.path.exists(WORD2IDX) and os.path.exists(VECS_BUFF) and not force_rebuild:
         # CF#3
         print("...loading from buffer")
@@ -220,28 +232,40 @@ class DataLoader():
 
 
 class TwoTowerModel(torch.nn.Module):
-    def __init__(self, vecs, final_metric):
+    def __init__(self, vecs, config):
         super(TwoTowerModel, self).__init__()
         #   CF#10a
         #   Initialize building block for architecture described in the assignment
-        self.final_metric = final_metric
+        self.final_metric = config["final_metric"]
+        self.config = config
 
         # torch.nn.Embedding
         # torch.nn.Linear
 
-        self.emb_layer = torch.nn.Embedding.from_pretrained(torch.tensor(vecs), freeze=True)
+        self.emb_layer = torch.nn.Embedding.from_pretrained(torch.tensor(vecs), freeze=not self.config["emb_training"])
+
         self.emb_proj = torch.nn.Linear(300, 128)
 
         print("requires grads? : ", self.emb_layer.weight.requires_grad)
         self.relu = torch.nn.ReLU()
 
-        self.final_proj_1 = torch.nn.Linear(256, 128)
+        # self.final_proj_1 = torch.nn.Linear(256, 128)
+        if not config["emb_projection"]:
+            self.final_proj_1 = torch.nn.Linear(600, 128)
+        else:
+            self.final_proj_1 = torch.nn.Linear(256, 128)
+
         self.final_proj_2 = torch.nn.Linear(128, 1)
 
     def _make_repre(self, idx):
         # embedding - > projection -> avg
         emb = self.emb_layer(idx)
-        proj = self.emb_proj(emb.float())
+        if self.config["emb_projection"]:
+            proj = self.emb_proj(emb.float())
+            proj = self.relu(proj)
+        else:
+            proj = emb
+        # proj = self.emb_proj(emb.float())
         avg = torch.mean(proj, 1)
         return avg
 
@@ -254,7 +278,7 @@ class TwoTowerModel(torch.nn.Module):
         #   Use both described similarity measures.
         if self.final_metric == "neural":
             repre = torch.cat((repre_a, repre_b), 1)
-            repre = self.final_proj_1(repre)
+            repre = self.final_proj_1(repre.float())
             repre = self.relu(repre)
             repre = self.final_proj_2(repre)
             repre = torch.squeeze(repre)
@@ -300,14 +324,19 @@ def test(data_set, net, loss_function):
     return test_loss
 
 
-def train_model(train_dataset, test_dataset, w2v, loss_function, final_metric):
+def train_model(train_dataset, test_dataset, w2v, loss_function, config):
     # net = CzertModel()
     # net = net.to(device)
-    net = TwoTowerModel(w2v, final_metric)
+    net = TwoTowerModel(w2v, config)
     net = net.to(device)
-
-    optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
-    lr_scheduler = MultiStepLR(optimizer, milestones=[3, 5], gamma=0.1)
+    if config["optimizer"] == "adam":
+        optimizer = torch.optim.Adam(net.parameters(), lr=config["lr"])
+    else:
+        optimizer = torch.optim.SGD(net.parameters(), lr=config["lr"])
+    if config["scheduler"] == "step":
+        lr_scheduler = StepLR(optimizer, step_size=1, gamma=0.1)
+    else:
+        lr_scheduler = ExponentialLR(optimizer, gamma=0.1)
 
     train_loss_arr = []
     test_loss_arr = []
@@ -325,13 +354,21 @@ def train_model(train_dataset, test_dataset, w2v, loss_function, final_metric):
             optimizer.zero_grad()
             predicted_sts = net(batch)
 
-            loss = loss_function(real_sts.float(), predicted_sts.float())
-            loss.backward()
+
+            # if         "final_metric": "cos",
+            #         "emb_training": False,
+            #         "emb_projection": False,
+            # don't backpropagate - there is no trainable parameters for this case
+            if config["final_metric"] == "cos" and not config["emb_training"] and not config["emb_projection"]:
+                loss = loss_function(real_sts.float(), predicted_sts.float())
+            else:
+                loss = loss_function(real_sts.float(), predicted_sts.float())
+                loss.backward()
             optimizer.step()
 
             running_loss += loss.item()
             sample += BATCH_SIZE
-            # wandb.log({"train_loss": loss, "lr": lr_scheduler.get_last_lr()}, commit=False)
+            wandb.log({"train_loss": loss, "lr": lr_scheduler.get_last_lr()}, commit=False)
 
             if i % MINIBATCH_SIZE == MINIBATCH_SIZE - 1:
                 train_loss = running_loss / MINIBATCH_SIZE
@@ -344,10 +381,10 @@ def train_model(train_dataset, test_dataset, w2v, loss_function, final_metric):
                 net.train()
                 test_loss_arr.append(test_loss)
 
-                # wandb.log({"test_loss": test_loss}, commit=False)
+                wandb.log({"test_loss": test_loss}, commit=False)
 
                 print(f"e{epoch} b{i}\ttrain_loss:{train_loss}\ttest_loss:{test_loss}\tlr:{lr_scheduler.get_last_lr()}")
-            # wandb.log({})
+            wandb.log({})
 
         lr_scheduler.step()
 
@@ -360,7 +397,10 @@ def train_model(train_dataset, test_dataset, w2v, loss_function, final_metric):
 
 
 def main(config=None):
-    # wandb.init(project=wandb_config["WANDB_PROJECT"], entity=wandb_config["WANDB_ENTITY"], tags=["cv02"], config=config)
+    print("config:", config)
+    global BATCH_SIZE
+    BATCH_SIZE = config["batch_size"]
+    wandb.init(project=wandb_config["WANDB_PROJECT"], entity=wandb_config["WANDB_ENTITY"], tags=["cv02"], config=config)
 
     with open(TRAIN_DATA, 'r', encoding="utf-8") as fd:
         train_data_texts = fd.read().split("\n")
@@ -368,26 +408,26 @@ def main(config=None):
     top_n_words = dataset_vocab_analysis(train_data_texts, -1)
     print(len(top_n_words))
 
-    word2idx, word_vectors = load_ebs(EMB_FILE, top_n_words, config['vocab_size'])
+    word2idx, word_vectors = load_ebs(EMB_FILE, top_n_words, config['vocab_size'], random_emb=config["random_emb"])
 
     vectorizer = MySentenceVectorizer(word2idx, MAX_SEQ_LEN)
-    EXPECTED = [259, 642, 249, 66, 252, 3226]
-    print("EXPECTED:", EXPECTED)
-    sentence = "Podle vlády dnes není dalších otázek"
-    print(vectorizer.sent2idx(sentence))
+    # EXPECTED = [259, 642, 249, 66, 252, 3226]
+    # print("EXPECTED:", EXPECTED)
+    # sentence = "Podle vlády dnes není dalších otázek"
+    # print(vectorizer.sent2idx(sentence))
 
     train_dataset = DataLoader(vectorizer, TRAIN_DATA, BATCH_SIZE)
     test_dataset = DataLoader(vectorizer, TEST_DATA, BATCH_SIZE)
 
-    dummy_net = DummyModel(train_dataset)
-    dummy_net = dummy_net.to(device)
-
+    # dummy_net = DummyModel(train_dataset)
+    # dummy_net = dummy_net.to(device)
+    #
     loss_function = torch.nn.MSELoss()
+    #
+    # test(test_dataset, dummy_net, loss_function)
+    # test(train_dataset, dummy_net, loss_function)
 
-    test(test_dataset, dummy_net, loss_function)
-    test(train_dataset, dummy_net, loss_function)
-
-    train_model(train_dataset, test_dataset, word_vectors, loss_function, config["final_metric"])
+    train_model(train_dataset, test_dataset, word_vectors, loss_function, config)
 
 
 if __name__ == '__main__':
