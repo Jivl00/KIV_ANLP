@@ -83,20 +83,28 @@ def load_ebs(emb_file, top_n_words: list, wanted_vocab_size, force_rebuild=False
             #  vocabulary ids corresponds to vectors in the matrix
             #  Do not forget to add UNK and PAD tokens into the vocabulary.
 
-            for idx, word in enumerate(top_n_words[:wanted_vocab_size]):
-                word2idx[word] = idx
-            word2idx[UNK] = len(word2idx)
-            word2idx[PAD] = len(word2idx)
+            top_n_words = set(top_n_words[:wanted_vocab_size])
 
             # prune given word embeddings to the wanted_vocab_size
-            vecs = np.zeros((len(word2idx), 300))
+            vecs = np.zeros((len(top_n_words) + 2, 300))
+            idx = 0
             for i, l in enumerate(emb_fd):
                 if i == 0:
                     continue
                 l = l.strip().split(" ")
                 word = l[0]
-                if word in word2idx:
-                    vecs[word2idx[word]] = np.array(l[1:], dtype=np.float32)
+                # if word in top_n_words:
+                if word in top_n_words:
+                    word2idx[word] = idx
+                    vecs[idx] = np.array(l[1:], dtype=np.float32)
+                    idx += 1
+
+            # remove unused rows
+            vecs = vecs[:idx + 2]  # +2 for UNK and PAD
+            word2idx[UNK] = len(word2idx)
+            word2idx[PAD] = len(word2idx)
+            vecs[word2idx[PAD]] = np.zeros(300)
+            vecs[word2idx[UNK]] = np.random.uniform(-1, 1, 300)
 
             assert len(word2idx) > 6820
             assert len(vecs) == len(word2idx)
@@ -352,6 +360,7 @@ def main(config=None):
 
     vectorizer = MySentenceVectorizer(word2idx, MAX_SEQ_LEN)
     EXPECTED = [259, 642, 249, 66, 252, 3226]
+    print("EXPECTED:", EXPECTED)
     sentence = "Podle vlády dnes není dalších otázek"
     print(vectorizer.sent2idx(sentence))
 
