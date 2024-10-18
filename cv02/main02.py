@@ -354,7 +354,6 @@ def train_model(train_dataset, test_dataset, w2v, loss_function, config):
             optimizer.zero_grad()
             predicted_sts = net(batch)
 
-
             # if         "final_metric": "cos",
             #         "emb_training": False,
             #         "emb_projection": False,
@@ -400,7 +399,9 @@ def main(config=None):
     print("config:", config)
     global BATCH_SIZE
     BATCH_SIZE = config["batch_size"]
-    wandb.init(project=wandb_config["WANDB_PROJECT"], entity=wandb_config["WANDB_ENTITY"], tags=["cv02"], config=config)
+    config_str = json.dumps(config)
+    wandb.init(project=wandb_config["WANDB_PROJECT"], entity=wandb_config["WANDB_ENTITY"], tags=["cv02"], config=config,
+               name=config_str)
 
     with open(TRAIN_DATA, 'r', encoding="utf-8") as fd:
         train_data_texts = fd.read().split("\n")

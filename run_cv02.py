@@ -17,11 +17,11 @@ if __name__ == '__main__':
     my_config = {
         "vocab_size": 20000,
         "random_emb": False,
-        "final_metric": "cos",
+        "final_metric": "neural",
         "emb_training": False,
         "emb_projection": True,
-        "lr": 0.001,
-        "optimizer": "adam",
+        "lr": 0.01,
+        "optimizer": "sgd",
         "batch_size": 1000,
         "lr_scheduler": "step"
     }
