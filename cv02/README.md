@@ -94,10 +94,6 @@ _MSE and MAE were chosen because the expected values in the test dataset are flo
    Count occurrences of words in the datasset, and prepare a list of
    top\_n words
 
-
-   _Here I´m actually a little confused. Why are we not getting rid of punctuation and other non-word characters, or
-   lowering letters?_
-
 **CKPT\#1**
 
 2. **Prepare Word Embeddings**.
@@ -205,6 +201,24 @@ _MSE and MAE were chosen because the expected values in the test dataset are flo
 
     **[5pt extra]**
 
+NOTES TO THIS SECTION
+=====================
+I would personally definitely trim the score in the top n words calculation (not only splitting by space but by
+tabulator as well). I gave it some thought
+and I think that I would leave the case and the punctuation in the text - because memory is not a problem
+and words like "Ahoj!" and "ahoj" should be treated as different words but have similar embedding vectors.
+For the purpose of successful unit tests, I kept the original implementation.
+
+As for the embeddings, <PAD> token is represented as a zero vector and <UNK> token is represented as a random vector 
+(uniform distribution). And they are not included in the vocabulary size, therefore the size of the vocabulary is the
+vocab_size + 2. Here a little more detailed description would be nice - It would eliminate the need for the discussion
+at the seminar.
+
+Also, It would be lovely to know in advance that the implementation will be needing some adjustments - like random embedding
+etc. I would have prepared the code for that in advance and not be surprised by the requirements later on. 
+
+The figures in the task description really helped with the understanding of the task.
+
 # My results
 
 ## Hyper Parameter Analysis
@@ -216,7 +230,12 @@ _MISSING_
 ### Table of my results **[4pt]**
 
 1. list all tuned HP
-2. add Dummy model into table
+
+| `random_emb` | `emb_training` | `emb_projection` | `vocab_size` | `final_metric`           | `lrs`                         | `opts`   | `batch_size` | `lr_scheduler`       |
+|--------------|----------------|------------------|--------------|--------------------------|-------------------------------|----------|--------------|----------------------|
+| false true   | false true     | false true       | 20000 40000  | cosine_similarity neural | 0.1 0.01 0.001 0.0001 0.00001 | SGD Adam | 100 500 1000 | StepLR ExponentialLR |
+
+3. add Dummy model into table
 3. present results with confidence intervals (run more experiments with the same config)
    _MISSING_
 
