@@ -220,12 +220,24 @@ etc. I would have prepared the code for that in advance and not be surprised by 
 The figures in the task description really helped with the understanding of the task.
 
 # My results
-
+Overall, over 3000 experiments were run. Since this number is quite high and wandb processes only 50
+runs in the figures, most of the pictures presented can be quite misleading (since 50 runs is not the general truth).
+Great example is the first figure, where other batch sizes are not visible at all, since they were not included in the
+last 50 runs.
 ## Hyper Parameter Analysis
 
 ### Parallel Coordinate Chart **[1pt]**
+I had some trouble with boolean values in the shell script, so I used integers instead. I hope that is not a problem.
+![W&B Chart 19. 10. 2024 23_21_24.svg](img%2FW%26B%20Chart%2019.%2010.%202024%2023_21_24.svg)
+Regarding the figure above, I can only cite Mr. Cibulka who taught mathematical analysis 1: "Z grafu není vidět nic."
+![W&B Chart 19. 10. 2024 23_21_242.svg](img%2FW%26B%20Chart%2019.%2010.%202024%2023_21_242.svg)
+Here, only runs with test loss lower than 3 (dummy model) are presented. What is interesting is that only neural final
+metric was used in these runs. It is also visible that Adam optimizer performed better than SGD and
+that the best results were achieved with learning rate 0.01. I have also observed that the smaller the batch size, the
+better the results (for the 3 values tested).
 
-_MISSING_
+Given the number of experiments, I really did not want to run more. But I believe that it could be beneficial to run
+more experiments with different batch sizes (especially smaller ones) to see to what extent the trend continues.
 
 ### Table of my results **[4pt]**
 
@@ -237,7 +249,9 @@ _MISSING_
 
 3. add Dummy model into table
 3. present results with confidence intervals (run more experiments with the same config)
-   _MISSING_
+
+I have learned my lesson and improved naming of my runs, therefore now I can easily group runs with the same configuration 
+(I used the config itself as the name of the run).
 
 ### Discussion **[2pt]**
 
