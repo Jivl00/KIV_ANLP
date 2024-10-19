@@ -6,9 +6,9 @@ emb_training="0 1"
 emb_projection="0 1"
 vocab_size="20000 40000"
 final_metric="cos neural"
-lrs="0.01 0.001 0.0001 0.00001"
+lrs="0.1 0.01 0.001 0.0001 0.00001"
 opts="sgd adam"
-batch_size="1000"
+batch_size="500 1000"
 lr_scheduler="step exp"
 
 for re in $random_emb; do
