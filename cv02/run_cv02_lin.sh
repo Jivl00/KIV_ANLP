@@ -1,11 +1,11 @@
 #!/bin/bash
 
 
-random_emb="True False"
-emb_training="True False"
-emb_projection="True False"
+random_emb="0 1"
+emb_training="0 1"
+emb_projection="0 1"
 vocab_size="20000 40000"
-final_metric="cos neutral"
+final_metric="cos neural"
 lrs="0.01 0.001 0.0001 0.00001"
 opts="sgd adam"
 batch_size="1000"

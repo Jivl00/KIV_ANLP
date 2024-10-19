@@ -32,8 +32,8 @@ VECS_BUFF = "vecs.pckl"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using {device}")
 
-DETERMINISTIC_SEED = 9
-random.seed(DETERMINISTIC_SEED)
+# DETERMINISTIC_SEED = 10
+# random.seed(DETERMINISTIC_SEED)
 
 UNK = "<UNK>"
 PAD = "<PAD>"
@@ -264,7 +264,7 @@ class TwoTowerModel(torch.nn.Module):
             proj = self.emb_proj(emb.float())
             proj = self.relu(proj)
         else:
-            proj = emb
+            proj = emb.float()
         # proj = self.emb_proj(emb.float())
         avg = torch.mean(proj, 1)
         return avg
@@ -354,6 +354,7 @@ def train_model(train_dataset, test_dataset, w2v, loss_function, config):
             optimizer.zero_grad()
             predicted_sts = net(batch)
 
+
             # if         "final_metric": "cos",
             #         "emb_training": False,
             #         "emb_projection": False,
@@ -401,7 +402,7 @@ def main(config=None):
     BATCH_SIZE = config["batch_size"]
     config_str = json.dumps(config)
     wandb.init(project=wandb_config["WANDB_PROJECT"], entity=wandb_config["WANDB_ENTITY"], tags=["cv02"], config=config,
-               name=config_str)
+            name=config_str)
 
     with open(TRAIN_DATA, 'r', encoding="utf-8") as fd:
         train_data_texts = fd.read().split("\n")

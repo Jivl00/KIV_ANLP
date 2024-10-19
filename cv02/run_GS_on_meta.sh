@@ -1,11 +1,16 @@
 #!/bin/bash
 #PBS -q default@pbs-m1.metacentrum.cz
 #PBS -l walltime=2:0:0
-#PBS -l select=1:ncpus=4:mem=32gb:scratch_local=32gb
+#PBS -l select=1:ncpus=1:mem=16gb:scratch_local=32gb:plzen=True
 #PBS -N GS2
 
+HOME=/storage/plzen1/home/jivl/ANLP/anlp-2024_kimlova_vladimira
+cd $SCRATCHDIR
+
+cp -r $HOME/* $SCRATCHDIR
+
 CONTAINER=/cvmfs/singularity.metacentrum.cz/NGC/PyTorch:21.03-py3.SIF
-PYTHON_SCRIPT=/storage/plzen1/home/jivl/ANLP/anlp-2024_kimlova_vladimira/run_cv02.py
+PYTHON_SCRIPT=run_cv02.py
 
 ls /cvmfs/singularity.metacentrum.cz
 
