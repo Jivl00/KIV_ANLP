@@ -209,7 +209,7 @@ and I think that I would leave the case and the punctuation in the text - becaus
 and words like "Ahoj!" and "ahoj" should be treated as different words but have similar embedding vectors.
 For the purpose of successful unit tests, I kept the original implementation.
 
-As for the embeddings, <PAD> token is represented as a zero vector and <UNK> token is represented as a random vector
+As for the embeddings, &lt;PAD&gt; token is represented as a zero vector and &lt;UNK&gt; token is represented as a random vector
 (uniform distribution). And they are not included in the vocabulary size, therefore the size of the vocabulary is the
 vocab_size + 2. Here a little more detailed description would be nice - It would eliminate the need for the discussion
 at the seminar.
@@ -262,7 +262,7 @@ configuration.
 
 Here are the results of the best runs and the dummy model:
 
-| model                 | accuracy -+ 95% confidence |
+| model                 | accuracy +- 95% confidence |
 |:----------------------|:---------------------------|
 | Random emb, ExpLR     | 1.721 +- 0.044             |
 | Random emb, StepLR    | 1.711 +- 0.051             |
