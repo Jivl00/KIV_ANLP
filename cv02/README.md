@@ -209,24 +209,28 @@ and I think that I would leave the case and the punctuation in the text - becaus
 and words like "Ahoj!" and "ahoj" should be treated as different words but have similar embedding vectors.
 For the purpose of successful unit tests, I kept the original implementation.
 
-As for the embeddings, <PAD> token is represented as a zero vector and <UNK> token is represented as a random vector 
+As for the embeddings, <PAD> token is represented as a zero vector and <UNK> token is represented as a random vector
 (uniform distribution). And they are not included in the vocabulary size, therefore the size of the vocabulary is the
 vocab_size + 2. Here a little more detailed description would be nice - It would eliminate the need for the discussion
 at the seminar.
 
-Also, It would be lovely to know in advance that the implementation will be needing some adjustments - like random embedding
-etc. I would have prepared the code for that in advance and not be surprised by the requirements later on. 
+Also, It would be lovely to know in advance that the implementation will be needing some adjustments - like random
+embedding
+etc. I would have prepared the code for that in advance and not be surprised by the requirements later on.
 
 The figures in the task description really helped with the understanding of the task.
 
 # My results
+
 Overall, over 3000 experiments were run. Since this number is quite high and wandb processes only 50
 runs in the figures, most of the pictures presented can be quite misleading (since 50 runs is not the general truth).
 Great example is the first figure, where other batch sizes are not visible at all, since they were not included in the
 last 50 runs.
+
 ## Hyper Parameter Analysis
 
 ### Parallel Coordinate Chart **[1pt]**
+
 I had some trouble with boolean values in the shell script, so I used integers instead. I hope that is not a problem.
 ![W&B Chart 19. 10. 2024 23_21_24.svg](img%2FW%26B%20Chart%2019.%2010.%202024%2023_21_24.svg)
 Regarding the figure above, I can only cite Mr. Cibulka who taught mathematical analysis 1: "Z grafu není vidět nic."
@@ -250,15 +254,78 @@ more experiments with different batch sizes (especially smaller ones) to see to 
 3. add Dummy model into table
 3. present results with confidence intervals (run more experiments with the same config)
 
-I have learned my lesson and improved naming of my runs, therefore now I can easily group runs with the same configuration 
-(I used the config itself as the name of the run).
+I have learned my lesson and improved naming of my runs, therefore now I can easily group runs with the same
+configuration
+(I used the config itself as the name of the run). So now I can choose the best runs as a best mean of the runs with the
+same
+configuration.
+
+Here are the results of the best runs and the dummy model:
+
+| model                 | accuracy -+ 95% confidence |
+|:----------------------|:---------------------------|
+| Random emb, ExpLR     | 1.721 +- 0.044             |
+| Random emb, StepLR    | 1.711 +- 0.051             |
+| No random emb, StepLR | 1.791 +- 0.053             |
+| Dummy                 | 3.222 +- 0.032             |
+
+Only distinct configurations are presented, all models shared: `learning_rate=0.01`, `optimizer=adam`, `emb_training=1`,
+`emb_projection=0`, `final_metric=neural`, `batch_size=100`.
+Overall, 12 runs were performed for each configuration.
+
+I´m a bit surprised that the best results were achieved with no embedding projection. I would expect that the projection
+layer would help the model to learn better. On the other hand, I intuitively expected that the embedding training would
+benefit the model and that the neural metric would perform better than cosine similarity.
 
 ### Discussion **[2pt]**
 
-_MISSING_
 Which HP I tuned?
 Which had the most visible impact?
 Did I use another techniques for more stable or better results?
+
+I tuned the following hyperparameters: `random_emb`, `emb_training`, `emb_projection`, `vocab_size`, `final_metric`,
+`lr`, `optimizer`, `batch_size`, `lr_scheduler`.
+![img.png](img/img.png)
+According to the parameter importance, the most important hyperparameter was learning rate. This result can be a bit
+misleading
+though, since more than 1000 experiments were run (over 3000 in total) and the parameter importance is calculated only
+from 1000 runs.
+
+It is kinda hard to say what hyperparameter value was the best overall, since there were so many experiments and the
+figures
+on wandb are made only from the last 50 runs. Therefore, I can´t for example see any other learning rate than 0.01.
+
+For the learning rate, 0.01 was the best value for most configurations (3.8 test loss on average). At first, I seemed
+that the smaller the learning rate,
+the better, but 0.1 performed worse than 0.01 (4.7 test loss on average). I´m guessing that in the learning rate
+scheduler configuration could
+play a big role here (but I did not have time to test it).
+
+Final metric also played a big role in the results. The neural metric performed better (3.8 test loss on average) than
+cosine similarity (6.2 test loss on average) in most cases. What surprised me was that there were no good combinations
+with the cosine similarity metric, I thought that with good embeddings, the cosine similarity would perform better than
+it did.
+
+Adam optimizer performed better (4.1 test loss on average) than SGD (6.0 test loss on average vs 4.7 test loss on average). I´m guessing that the
+momentum in Adam helped the model to converge faster.
+
+The batch size also played a big role in the results. I originally tested only batch size 1000, but had trouble hitting
+test loss under 2. Lowering the batch size to 100 helped a lot. As I mentioned earlier, It would be interesting to test
+even smaller batch sizes.
+
+I would expect that the embeddings would play a big role as well since without training the random embeddings don´t make
+much sense. But the overall results were quite similar, non-random embeddings performed just a bit better (4.9 test loss
+on average vs 5.0 test loss on average). The same applies to the embedding training itself, the results were quite
+similar (4.9 test loss on average vs 5.1 test loss on average). This goes against my intuition, I would expect way more
+distinct results.
+
+Lastly the embedding projection layer did not help the model that much. The results showed that the model performed
+better with the projection layer (4.9 test loss on average vs 5.0 test loss on average). Which is quite surprising since
+the best results were achieved without the projection layer. On the other hand, I would expect that the projection layer
+would help the model to learn better.
+
+I also think that it would be interesting to test more vocab sizes since they could be quite
+impactful on the results as well.
 
 # To Think About:
 

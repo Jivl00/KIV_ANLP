@@ -32,8 +32,8 @@ VECS_BUFF = "vecs.pckl"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using {device}")
 
-# DETERMINISTIC_SEED = 10
-# random.seed(DETERMINISTIC_SEED)
+DETERMINISTIC_SEED = 10
+random.seed(DETERMINISTIC_SEED)
 
 UNK = "<UNK>"
 PAD = "<PAD>"
@@ -387,8 +387,8 @@ def main(config=None):
     global BATCH_SIZE
     BATCH_SIZE = config["batch_size"]
     config_str = json.dumps(config)
-    wandb.init(project=wandb_config["WANDB_PROJECT"], entity=wandb_config["WANDB_ENTITY"], tags=["cv02"], config=config,
-               name=config_str)
+    # wandb.init(project=wandb_config["WANDB_PROJECT"], entity=wandb_config["WANDB_ENTITY"], tags=["cv02"], config=config,
+    #            name=config_str)
 
     with open(TRAIN_DATA, 'r', encoding="utf-8") as fd:
         train_data_texts = fd.read().split("\n")
@@ -412,10 +412,11 @@ def main(config=None):
     #
     loss_function = torch.nn.MSELoss()
     #
-    # test(test_dataset, dummy_net, loss_function)
-    # test(train_dataset, dummy_net, loss_function)
+    # tests = [test(test_dataset, dummy_net, loss_function) for i in range(12)]
+    # print("mean test loss:", np.mean(tests), "+-", np.std(tests))
 
-    train_model(train_dataset, test_dataset, word_vectors, loss_function, config)
+    # test(train_dataset, dummy_net, loss_function)
+    # train_model(train_dataset, test_dataset, word_vectors, loss_function, config)
 
 
 if __name__ == '__main__':
