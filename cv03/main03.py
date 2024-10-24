@@ -59,17 +59,32 @@ class MyBaseModel(torch.nn.Module):
         super(MyBaseModel, self).__init__()
 
         self.softmax = nn.Softmax(dim=-1)
-        self.activation = None
-        self.emb_layer = None
-        self.emb_proj = None
+        self.activation = nn.ReLU() if config["activation"] == "relu" else nn.GELU()
+
+        self.emb_layer = nn.Embedding.from_pretrained(torch.tensor(w2v, dtype=torch.float32), padding_idx=0,
+                                                      freeze=not config["emb_training"])
+        self.emb_proj = nn.Linear(w2v.shape[1], config["proj_size"])
 
 
 class MyModelAveraging(MyBaseModel):
     def __init__(self, config, w2v=None):
         super(MyModelAveraging, self).__init__(config, w2v),
+        self.config = config
+        if config["emb_projection"]:
+            self.head = nn.Linear(config["proj_size"], NUM_CLS)
+        else:
+            self.head = nn.Linear(w2v.shape[1], NUM_CLS)
 
-    def forward(self, x, l):
-        return None
+    def forward(self, x):
+        x = torch.tensor(x).to(self.config["device"])
+        x = self.emb_layer(x)
+        x = x.float()
+        if self.config["emb_projection"]:
+            x = self.emb_proj(x)
+            x = self.activation(x)
+        x = torch.mean(x, dim=1)
+        x = self.head(x)
+        return self.softmax(x)
 
 
 class MyModelConv(MyBaseModel):
@@ -106,24 +121,23 @@ def test_on_dataset(dataset_iterator, vectorizer, model, loss_metric_func):
     test_acc_list = []
     test_enum_y = []
     test_enum_pred = []
+    with torch.no_grad():
+        for b in dataset_iterator:
+            texts = b["text"]
+            labels = b["label"]
 
-    for b in dataset_iterator:
-        texts = b["text"]
-        labels = b["label"]
+            vectorized = [vectorizer.sent2idx(x) for x in texts]
 
-        vectorized = [vectorizer.sent2idx(x) for x in texts]
+            pred = model(vectorized)
+            loss = loss_metric_func(pred, labels)
+            test_loss_list.append(loss.item())
 
-        pred = model(vectorized)
-        loss = loss_metric_func(pred, labels)
-        test_loss_list.append(loss.item())
+            pred_cls = torch.argmax(pred, dim=-1)
+            acc = torch.sum(pred_cls == labels) / len(labels)
+            test_acc_list.append(acc.item())
 
-        pred_cls = torch.argmax(pred, dim=-1)
-        acc = torch.sum(pred_cls == labels) / len(labels)
-        test_acc_list.append(acc.item())
-
-        test_enum_y.append(labels)
-        test_enum_pred.append(pred_cls)
-
+            test_enum_y.append(labels)
+            test_enum_pred.append(pred_cls)
 
     return {
         "test_acc": sum(test_acc_list) / len(test_acc_list),
@@ -209,9 +223,6 @@ def main(config: dict):
     cls_val_iterator = DataLoader(cls_dataset['valid'], batch_size=config['batch_size'])
     cls_test_iterator = DataLoader(cls_dataset['test'], batch_size=config['batch_size'])
 
-
-
-
     if config["model"] == CNN_MODEL:
         model = MyModelConv(config, w2v=word_vectors)
     elif config["model"] == MEAN_MODEL:
@@ -231,7 +242,7 @@ def main(config: dict):
     cross_entropy = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=config["lr"])
 
-    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 0)
+    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10)
 
     batch = 0
     while True:
@@ -248,19 +259,21 @@ def main(config: dict):
             loss.backward()
             optimizer.step()
 
-
             if batch % 100 == 0:
                 model.eval()
                 ret = test_on_dataset(cls_val_iterator, vectorizer, model, cross_entropy)
-                conf_matrix = wandb.plot.confusion_matrix(preds=ret["test_pred_clss"].cpu().numpy(),
-                                                          y_true=ret["test_enum_gold"].cpu().numpy(),
-                                                          class_names=CLS_NAMES)
+                # conf_matrix = wandb.plot.confusion_matrix(preds=ret["test_pred_clss"].cpu().numpy(),
+                #                                           y_true=ret["test_enum_gold"].cpu().numpy(),
+                #                                           class_names=CLS_NAMES)
                 # wandb.log({"conf_mat":conf_matrix})
 
                 # wandb.log({"test_acc": ret["test_acc"],
                 #            "test_loss": ret["test_loss"]}, commit=False)
                 model.train()
+                print(f"batch: {batch} test_acc: {ret['test_acc']} test_loss: {ret['test_loss']}")
 
+            train_acc = torch.sum(torch.argmax(pred, dim=-1) == labels) / len(labels)
+            total_norm = nn.utils.clip_grad_norm_(model.parameters(), config["gradient_clip"])
             # wandb.log(
             #     {"train_loss": loss, "train_acc": train_acc, "lr": lr_scheduler.get_last_lr()[0], "pred": pred,
             #      "norm": total_norm})
@@ -272,10 +285,8 @@ def main(config: dict):
             break
 
     ret = test_on_dataset(cls_test_iterator, vectorizer, model, cross_entropy)
-    wandb.log({"final_test_acc": ret["test_acc"],
-               "final_test_loss": ret["test_loss"]})
-
-
+    # wandb.log({"final_test_acc": ret["test_acc"],
+    #            "final_test_loss": ret["test_loss"]})
 
 
 if __name__ == '__main__':

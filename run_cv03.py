@@ -40,6 +40,7 @@ if __name__ == '__main__':
 
         "n_kernel": 64,
         "proj_size": 100,
+        "emb_projection": True,
 
     }
 
