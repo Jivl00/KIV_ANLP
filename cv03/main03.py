@@ -7,6 +7,8 @@ import sys
 from collections import defaultdict
 
 import random
+
+import numpy as np
 import torch
 # from ignite.contrib.handlers.param_scheduler import create_lr_scheduler_with_warmup
 from datasets import load_dataset
@@ -14,10 +16,11 @@ from datasets import load_dataset
 import wandb
 from torch import nn
 from torch.utils.data import DataLoader
+from collections import Counter
 
 import wandb_config
 from cv02.consts import EMB_FILE
-from cv02.main02 import dataset_vocab_analysis, load_ebs, MySentenceVectorizer, PAD, UNK
+from cv02.main02 import dataset_vocab_analysis, MySentenceVectorizer, PAD, UNK
 
 NUM_CLS = 3
 
@@ -31,12 +34,21 @@ CLS_NAMES = ["neg", "neu", "pos"]
 
 from wandb_config import WANDB_PROJECT, WANDB_ENTITY
 
+from cv02.main02 import dataset_vocab_analysis, load_ebs, MySentenceVectorizer, DataLoader, DummyModel, test, WORD2IDX, \
+    VECS_BUFF
+import sys
+
 
 def count_statistics(dataset, vectorizer) -> tuple[float, dict]:
     ## todo CF#01
+    for sentence in dataset["text"]:
+        vectorizer.sent2idx(sentence)
 
-    coverage = 0
-    class_distribution = defaultdict(lambda: 0)
+    coverage = 1 - vectorizer.out_of_vocab_perc() / 100
+    class_distribution = Counter(dataset["label"])
+    # normalize
+    for k in class_distribution:
+        class_distribution[k] = class_distribution[k] / len(dataset["label"])
 
     return coverage, class_distribution
 
@@ -51,9 +63,10 @@ class MyBaseModel(torch.nn.Module):
         self.emb_layer = None
         self.emb_proj = None
 
+
 class MyModelAveraging(MyBaseModel):
     def __init__(self, config, w2v=None):
-        super(MyModelAveraging, self).__init__(config,w2v),
+        super(MyModelAveraging, self).__init__(config, w2v),
 
     def forward(self, x, l):
         return None
@@ -79,7 +92,6 @@ class MyModelConv(MyBaseModel):
             self.cnn_config = [(1, config["n_kernel"], (2, config["proj_size"])),
                                (1, config["n_kernel"], (3, config["proj_size"])),
                                (1, config["n_kernel"], (4, config["proj_size"]))]
-
 
         # !!!!!! TODO
         # this line is important if you use list to group your architecture ... optimizer would not register if it is not used
@@ -107,26 +119,83 @@ def test_on_dataset(dataset_iterator, vectorizer, model, loss_metric_func):
     }
 
 
-def main(config : dict):
-    
+def load_ebs(emb_file, top_n_words: list, wanted_vocab_size, force_rebuild=False, random_emb=False):
+    print("prepairing W2V...", end="")
+    if random_emb:
+        print("...random embeddings")
+        word2idx = {}
+        for i, w in enumerate(top_n_words[:wanted_vocab_size]):
+            word2idx[w] = i
+        word2idx[UNK] = len(word2idx)
+        word2idx[PAD] = len(word2idx)
+        vecs = np.random.uniform(-1, 1, (wanted_vocab_size + 2, 300))
+        vecs[word2idx[PAD]] = np.zeros(300)
+        assert len(vecs) == len(word2idx)
+
+        return word2idx, vecs
+    if os.path.exists(WORD2IDX) and os.path.exists(VECS_BUFF) and not force_rebuild:
+        # CF#3
+        print("...loading from buffer")
+        with open(WORD2IDX, 'rb') as idx_fd, open(VECS_BUFF, 'rb') as vecs_fd:
+            word2idx = pickle.load(idx_fd)
+            vecs = pickle.load(vecs_fd)
+    else:
+        print("...creating from scratch")
+
+        with open(emb_file, 'r', encoding="utf-8") as emb_fd:
+            word2idx = {}
+            vecs = []
+
+            for idx, word in enumerate(top_n_words[:wanted_vocab_size]):
+                word2idx[word] = idx
+
+            # prune given word embeddings to the wanted_vocab_size
+            vecs = np.random.uniform(-1, 1, (len(word2idx) + 2, 300))
+            for i, l in enumerate(emb_fd):
+                if i == 0:
+                    continue
+                l = l.strip().split(" ")
+                word = l[0]
+                if word in word2idx:
+                    vecs[word2idx[word]] = np.array(l[1:], dtype=np.float32)
+
+            word2idx[UNK] = len(word2idx)
+            word2idx[PAD] = len(word2idx)
+            vecs[word2idx[PAD]] = np.zeros(300)
+            # vecs[word2idx[UNK]] = np.random.uniform(-1, 1, 300)
+
+            # assert len(word2idx) > 6820
+            assert len(vecs) == len(word2idx)
+            pickle.dump(word2idx, open(WORD2IDX, 'wb'))
+            pickle.dump(vecs, open(VECS_BUFF, 'wb'))
+
+    return word2idx, vecs
+
+
+def main(config: dict):
     cls_dataset = load_dataset("csv", delimiter='\t', data_files={"train": [CSFD_DATASET_TRAIN],
                                                                   "test": [CSFD_DATASET_TEST]})
 
+    top_n_words = dataset_vocab_analysis(cls_dataset['train']["text"], top_n=-1)
+    print("Top N words:", len(top_n_words))
 
-    cls_train_iterator = DataLoader(cls_dataset['train'], batch_size=config['batch_size'])
-    cls_test_iterator = DataLoader(cls_dataset['test'], batch_size=config['batch_size'])
+    word2idx, word_vectors = load_ebs(EMB_FILE, top_n_words, config['vocab_size'], force_rebuild=True)
 
+    vectorizer = MySentenceVectorizer(word2idx, config["seq_len"])
 
     coverage, cls_dist = count_statistics(cls_dataset['train'], vectorizer)
     print(f"COVERAGE: {coverage}\ncls_dist:{cls_dist}")
+
+    # cls_train_iterator = DataLoader(cls_dataset['train'], batch_size=config['batch_size'])
+    # cls_test_iterator = DataLoader(cls_dataset['test'], batch_size=config['batch_size'])
 
     if not config["emb_training"]:
         word_vectors = None
 
     if config["model"] == CNN_MODEL:
-        model = MyModelConv(config,w2v=word_vectors)
+        model = MyModelConv(config, w2v=word_vectors)
     elif config["model"] == MEAN_MODEL:
-        model = MyModelAveraging(config,w2v=word_vectors)
+        model = MyModelAveraging(config, w2v=word_vectors)
 
     num_of_params = 0
     for x in model.parameters():
@@ -135,14 +204,14 @@ def main(config : dict):
     config["num_of_params"] = num_of_params
     print("num of params:", num_of_params)
 
-    wandb.init(project=WANDB_PROJECT, entity=WANDB_ENTITY, tags=["cv03"], config=config)
+    # wandb.init(project=WANDB_PROJECT, entity=WANDB_ENTITY, tags=["cv03"], config=config)
     # wandb.init(project=WANDB_PROJECT, entity=WANDB_ENTITY, tags=["cv03","best"], config=config)
 
     model.to(config["device"])
     cross_entropy = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=config["lr"])
 
-    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer,0)
+    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 0)
 
     batch = 0
     while True:
@@ -152,17 +221,16 @@ def main(config : dict):
 
             if batch % 100 == 0:
                 ret = test_on_dataset(cls_test_iterator, vectorizer, model, cross_entropy)
-                conf_matrix = None # wandb.plot.confusion_matrix(...)
-                wandb.log({"conf_mat":conf_matrix})
+                conf_matrix = None  # wandb.plot.confusion_matrix(...)
+                # wandb.log({"conf_mat":conf_matrix})
 
-                wandb.log({"test_acc": ret["test_acc"],
-                           "test_loss": ret["test_loss"]}, commit=False)
+                # wandb.log({"test_acc": ret["test_acc"],
+                #            "test_loss": ret["test_loss"]}, commit=False)
 
-            wandb.log(
-                {"train_loss": loss, "train_acc": train_acc, "lr": lr_scheduler.get_last_lr()[0], "pred": pred,
-                 "norm": total_norm})
+            # wandb.log(
+            #     {"train_loss": loss, "train_acc": train_acc, "lr": lr_scheduler.get_last_lr()[0], "pred": pred,
+            #      "norm": total_norm})
             batch += 1
-
 
 
 if __name__ == '__main__':
@@ -195,5 +263,3 @@ if __name__ == '__main__':
               }
 
     main(config)
-
-

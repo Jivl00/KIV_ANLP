@@ -52,6 +52,15 @@ top\_n words
 - Coverage is ratio between tokens you have in your vocabulary and all tokens.
 Do not count pad tokens
 - Count statistics about class distribution in dataset (train/test)
+![Train Sentiment Score Histogram.svg](img%2FTrain%20Sentiment%20Score%20Histogram.svg)
+![Test Sentiment Score Histogram.svg](img%2FTest%20Sentiment%20Score%20Histogram.svg)
+As shown in the histograms, both train and test datasets are balanced.
+
+
+# NOTE:
+- **Test imports change to:**
+    `from cv03.main03 import load_embs`
+- For unit test compatibility with cv02, I swear I did not change anything in the code.
 
 2. **Prepare Word Embeddings**.
     https://drive.google.com/file/d/1MTDoyoGRhvLf15yL4NeEbpYLbcBlDZ3c/view?usp=sharing

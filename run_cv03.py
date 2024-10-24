@@ -28,7 +28,11 @@ if __name__ == '__main__':
         "lstm_hidden": 1024,
         "lstm_stack": 4,
         "gradient_clip": 1000000,
-        "batches": 500000
+        "batches": 500000,
+
+        "seq_len": 100,
+        "vocab_size": 20000,
+        "emb_training": False,
     }
 
     config.update(args)
