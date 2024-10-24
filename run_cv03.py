@@ -1,7 +1,7 @@
 import argparse
 
 
-from cv03.main03 import main, CNN_MODEL
+from cv03.main03 import main, CNN_MODEL, MEAN_MODEL
 
 if __name__ == '__main__':
 
@@ -20,9 +20,9 @@ if __name__ == '__main__':
     args = vars(parser.parse_args())
 
     config = {
-        "model" : CNN_MODEL,
-        "batch_size": None,
-        "learning_rate": None,
+        "model" : MEAN_MODEL,
+        "batch_size": 33,
+        "lr": 0.0001,
 
         "emb_size": 100,
         "lstm_hidden": 1024,
@@ -33,6 +33,14 @@ if __name__ == '__main__':
         "seq_len": 100,
         "vocab_size": 20000,
         "emb_training": False,
+        "random_emb": False,
+        "cnn_architecture": "C",
+        "device": "cpu",
+        "activation": "relu",
+
+        "n_kernel": 64,
+        "proj_size": 100,
+
     }
 
     config.update(args)
