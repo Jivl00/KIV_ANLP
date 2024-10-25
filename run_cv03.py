@@ -20,7 +20,7 @@ if __name__ == '__main__':
     args = vars(parser.parse_args())
 
     config = {
-        "model" : MEAN_MODEL,
+        "model": CNN_MODEL,
         "batch_size": 33,
         "lr": 0.0001,
 

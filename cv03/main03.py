@@ -95,25 +95,55 @@ class MyModelConv(MyBaseModel):
         # todo CF#CNN_CONF
         self.cnn_architecture = config["cnn_architecture"]  # for unit tests
         if self.cnn_architecture == "A":
-            self.cnn_config = [(1, config["n_kernel"], (2, 1)), (1, config["n_kernel"], (3, 1)),
+            self.cnn_config = [(1, config["n_kernel"], (2, 1)),
+                               (1, config["n_kernel"], (3, 1)),
                                (1, config["n_kernel"], (4, 1))]
             self.config["hidden_size"] = 500
         elif self.cnn_architecture == "B":
             self.config["hidden_size"] = 514
-            self.cnn_config = [(1, config["n_kernel"], (2, 2)), (1, config["n_kernel"], (3, 3)),
-                               (1, config["n_kernel"], (4, 4))]
+            self.cnn_config = [(1, config["n_kernel"], (2, config["proj_size"] // 2)),
+                               (1, config["n_kernel"], (3, config["proj_size"] // 2)),
+                               (1, config["n_kernel"], (4, config["proj_size"] // 2))]
         elif self.cnn_architecture == "C":
             self.config["hidden_size"] = 35000
             self.cnn_config = [(1, config["n_kernel"], (2, config["proj_size"])),
                                (1, config["n_kernel"], (3, config["proj_size"])),
                                (1, config["n_kernel"], (4, config["proj_size"]))]
+        self.conv_layers = []
+        for i, (in_channels, out_channels, kernel_size) in enumerate(self.cnn_config):
+            self.conv_layers.append(nn.Conv2d(in_channels, out_channels, kernel_size))
+        self.max_pools = [nn.MaxPool2d((config["seq_len"] - kernel_size[2][0] + 1, 1)) for kernel_size in
+                            self.cnn_config]
+        reduced_emb_size = config["proj_size"] if config["emb_projection"] else w2v.shape[1]
+        reduced_emb_size = reduced_emb_size - self.cnn_config[0][2][1] + 1
+        self.head = nn.Linear(reduced_emb_size * len(self.cnn_config) * config["n_kernel"], NUM_CLS)
+
+        self.dropout = nn.Dropout(0.5)
+
 
         # !!!!!! TODO
         # this line is important if you use list to group your architecture ... optimizer would not register if it is not used
         self.modules = nn.ModuleList(self.conv_layers)
 
-    def forward(self, x, l):
-        return None
+    def forward(self, x):
+        x = torch.tensor(x).to(self.config["device"])
+        x = self.emb_layer(x)
+        x = x.float()
+        if self.config["emb_projection"]:
+            x = self.emb_proj(x)
+            x = self.activation(x)
+        x = x.unsqueeze(1)
+        conv_outs = []
+        for i, conv in enumerate(self.conv_layers):
+            conv_out = conv(x)
+            conv_out = self.activation(conv_out)
+            conv_out = self.max_pools[i](conv_out)
+            conv_out = self.dropout(conv_out)
+            conv_outs.append(conv_out)
+        x = torch.cat(conv_outs, dim=1)
+        x = x.view(x.shape[0], -1)
+        x = self.head(x)
+        return self.softmax(x)
 
 
 def test_on_dataset(dataset_iterator, vectorizer, model, loss_metric_func):
