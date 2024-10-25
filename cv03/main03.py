@@ -1,6 +1,7 @@
 # https://pytorch.org/data/main/tutorial.html
 # https://towardsdatascience.com/text-classification-with-cnns-in-pytorch-1113df31e79f
 import configparser
+import json
 import os
 import pickle
 import sys
@@ -61,9 +62,14 @@ class MyBaseModel(torch.nn.Module):
         self.softmax = nn.Softmax(dim=-1)
         self.activation = nn.ReLU() if config["activation"] == "relu" else nn.GELU()
 
-        self.emb_layer = nn.Embedding.from_pretrained(torch.tensor(w2v, dtype=torch.float32), padding_idx=0,
-                                                      freeze=not config["emb_training"])
-        self.emb_proj = nn.Linear(w2v.shape[1], config["proj_size"])
+        if w2v is not None:
+            self.emb_layer = nn.Embedding.from_pretrained(torch.tensor(w2v, dtype=torch.float32), padding_idx=0,
+                                                          freeze=not config["emb_training"])
+            self.emb_proj = nn.Linear(w2v.shape[1], config["proj_size"])
+        else:
+            config["emb_size"] = 300
+            self.emb_layer = nn.Embedding(config["vocab_size"], config["emb_size"], padding_idx=0)
+            self.emb_proj = nn.Linear(config["emb_size"], config["proj_size"])
 
 
 class MyModelAveraging(MyBaseModel):
@@ -265,8 +271,10 @@ def main(config: dict):
     config["num_of_params"] = num_of_params
     print("num of params:", num_of_params)
 
-    # wandb.init(project=WANDB_PROJECT, entity=WANDB_ENTITY, tags=["cv03"], config=config)
-    # wandb.init(project=WANDB_PROJECT, entity=WANDB_ENTITY, tags=["cv03","best"], config=config)
+    # wandb.init(project=WANDB_PROJECT, entity=WANDB_ENTITY, tags=["cv03"], config=config,
+    #            name=json.dumps(config))
+    # wandb.init(project=WANDB_PROJECT, entity=WANDB_ENTITY, tags=["cv03","best"], config=config,
+    #            name=json.dumps(config))
 
     model.to(config["device"])
     cross_entropy = nn.CrossEntropyLoss()
