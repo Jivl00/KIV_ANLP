@@ -26,7 +26,7 @@ def plot_histogram(data, title, color, label):
     plt.xticks(range(len(data)), fontsize=12)
     plt.yticks(fontsize=12)
     plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.savefig(f"img/{title}.svg")
+    # plt.savefig(f"img/{title}.svg")
     plt.show()
 
 
@@ -45,3 +45,25 @@ data = {'Dataset': ['Train', 'Test'],
         'Std': [train_std, test_std]}
 df = pd.DataFrame(data)
 print(df.to_markdown(index=False))
+
+# Text length analysis
+# Create histogram of text length.
+train_text_hist = train_data["text"].apply(lambda x: len(x.split())).value_counts().sort_index()
+
+plt.figure(figsize=(10, 8))
+plt.bar(train_text_hist.index, train_text_hist, color='skyblue', label='Train')
+plt.ylabel("Count", fontsize=14)
+plt.xlabel("Text Length", fontsize=14)
+plt.title("Train Text Length Histogram", fontsize=16)
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.savefig(f"img/Train Text Length Histogram.svg")
+plt.show()
+
+
+
+train_text_avg = train_data["text"].apply(lambda x: len(x.split())).mean()
+train_text_std = train_data["text"].apply(lambda x: len(x.split())).std()
+train_text_q = train_data["text"].apply(lambda x: len(x.split())).quantile(0.88)
+
+print(f"Average text length in train dataset: {train_text_avg} +- {train_text_std}")
+print(f"88% quantile text length in train dataset: {train_text_q}")

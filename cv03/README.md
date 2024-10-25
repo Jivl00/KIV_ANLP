@@ -55,8 +55,10 @@ Do not count pad tokens
 ![Train Sentiment Score Histogram.svg](img%2FTrain%20Sentiment%20Score%20Histogram.svg)
 ![Test Sentiment Score Histogram.svg](img%2FTest%20Sentiment%20Score%20Histogram.svg)
 As shown in the histograms, both train and test datasets are balanced.
-
-
+![Train Text Length Histogram.svg](img%2FTrain%20Text%20Length%20Histogram.svg)
+The figure above shows the distribution of text lengths in the training dataset.
+This can really help with setting the sequence length for the model.
+I chose the sequence length to be 100, which corresponds to the 88th percentile of the text length distribution.
 # NOTE:
 - **Test imports change to:**
     `from cv03.main03 import load_embs`
