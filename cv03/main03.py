@@ -40,7 +40,7 @@ from cv02.main02 import dataset_vocab_analysis, load_ebs, MySentenceVectorizer, 
 import sys
 
 
-def count_statistics(dataset, vectorizer) -> tuple[float, dict]:
+def count_statistics(dataset, vectorizer):
     ## todo CF#01
     for sentence in dataset["text"]:
         vectorizer.sent2idx(sentence)
@@ -106,12 +106,12 @@ class MyModelConv(MyBaseModel):
                                (1, config["n_kernel"], (4, 1))]
             self.config["hidden_size"] = 500
         elif self.cnn_architecture == "B":
-            self.config["hidden_size"] = 514
+            self.config["hidden_size"] = 970
             self.cnn_config = [(1, config["n_kernel"], (2, config["proj_size"] // 2)),
                                (1, config["n_kernel"], (3, config["proj_size"] // 2)),
                                (1, config["n_kernel"], (4, config["proj_size"] // 2))]
         elif self.cnn_architecture == "C":
-            self.config["hidden_size"] = 35000
+            self.config["hidden_size"] = 35020
             self.cnn_config = [(1, config["n_kernel"], (2, config["proj_size"])),
                                (1, config["n_kernel"], (3, config["proj_size"])),
                                (1, config["n_kernel"], (4, config["proj_size"]))]
@@ -122,7 +122,8 @@ class MyModelConv(MyBaseModel):
                             self.cnn_config]
         reduced_emb_size = config["proj_size"] if config["emb_projection"] else w2v.shape[1]
         reduced_emb_size = reduced_emb_size - self.cnn_config[0][2][1] + 1
-        self.head = nn.Linear(reduced_emb_size * len(self.cnn_config) * config["n_kernel"], NUM_CLS)
+        self.proj = nn.Linear(reduced_emb_size * len(self.cnn_config) * config["n_kernel"], self.config["hidden_size"])
+        self.head = nn.Linear(self.config["hidden_size"], NUM_CLS)
 
         self.dropout = nn.Dropout(0.5)
 
@@ -148,6 +149,8 @@ class MyModelConv(MyBaseModel):
             conv_outs.append(conv_out)
         x = torch.cat(conv_outs, dim=1)
         x = x.view(x.shape[0], -1)
+        x = self.proj(x)
+        x = self.activation(x)
         x = self.head(x)
         return self.softmax(x)
 
@@ -268,11 +271,11 @@ def main(config: dict):
     for x in model.parameters():
         print(x.shape)
         num_of_params += torch.prod(torch.tensor(x.shape), 0)
-    config["num_of_params"] = num_of_params
+    config["num_of_params"] = int(num_of_params)
     print("num of params:", num_of_params)
 
-    # wandb.init(project=WANDB_PROJECT, entity=WANDB_ENTITY, tags=["cv03"], config=config,
-    #            name=json.dumps(config))
+    wandb.init(project=WANDB_PROJECT, entity=WANDB_ENTITY, tags=["cv03"], config=config,
+               name=json.dumps(config))
     # wandb.init(project=WANDB_PROJECT, entity=WANDB_ENTITY, tags=["cv03","best"], config=config,
     #            name=json.dumps(config))
 
@@ -300,21 +303,21 @@ def main(config: dict):
             if batch % 100 == 0:
                 model.eval()
                 ret = test_on_dataset(cls_val_iterator, vectorizer, model, cross_entropy)
-                # conf_matrix = wandb.plot.confusion_matrix(preds=ret["test_pred_clss"].cpu().numpy(),
-                #                                           y_true=ret["test_enum_gold"].cpu().numpy(),
-                #                                           class_names=CLS_NAMES)
-                # wandb.log({"conf_mat":conf_matrix})
-
-                # wandb.log({"test_acc": ret["test_acc"],
-                #            "test_loss": ret["test_loss"]}, commit=False)
+                conf_matrix = wandb.plot.confusion_matrix(preds=ret["test_pred_clss"].cpu().numpy(),
+                                                          y_true=ret["test_enum_gold"].cpu().numpy(),
+                                                          class_names=CLS_NAMES)
+                wandb.log({"conf_mat":conf_matrix})
+                #
+                wandb.log({"test_acc": ret["test_acc"],
+                           "test_loss": ret["test_loss"]}, commit=False)
                 model.train()
                 print(f"batch: {batch} test_acc: {ret['test_acc']} test_loss: {ret['test_loss']}")
 
             train_acc = torch.sum(torch.argmax(pred, dim=-1) == labels) / len(labels)
             total_norm = nn.utils.clip_grad_norm_(model.parameters(), config["gradient_clip"])
-            # wandb.log(
-            #     {"train_loss": loss, "train_acc": train_acc, "lr": lr_scheduler.get_last_lr()[0], "pred": pred,
-            #      "norm": total_norm})
+            wandb.log(
+                {"train_loss": loss, "train_acc": train_acc, "lr": lr_scheduler.get_last_lr()[0], "pred": pred,
+                 "norm": total_norm})
             batch += 1
 
         lr_scheduler.step()
@@ -323,8 +326,8 @@ def main(config: dict):
             break
 
     ret = test_on_dataset(cls_test_iterator, vectorizer, model, cross_entropy)
-    # wandb.log({"final_test_acc": ret["test_acc"],
-    #            "final_test_loss": ret["test_loss"]})
+    wandb.log({"final_test_acc": ret["test_acc"],
+               "final_test_loss": ret["test_loss"]})
 
 
 if __name__ == '__main__':

@@ -21,12 +21,12 @@ def plot_histogram(data, title, color, label):
     for i, v in enumerate(data):
         plt.text(i, v + 0.5, str(int(v.item())), ha='center', va='top', fontsize=12, rotation=90)
     plt.ylabel("Count", fontsize=14)
-    plt.xlabel("Similarity", fontsize=14)
+    plt.xlabel("Sentiment Score", fontsize=14)
     plt.title(title, fontsize=16)
     plt.xticks(range(len(data)), fontsize=12)
     plt.yticks(fontsize=12)
     plt.grid(axis='y', linestyle='--', alpha=0.7)
-    # plt.savefig(f"img/{title}.svg")
+    plt.savefig(f"img/{title}.svg")
     plt.show()
 
 

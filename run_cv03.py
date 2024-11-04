@@ -1,10 +1,9 @@
 import argparse
-
+import json
 
 from cv03.main03 import main, CNN_MODEL, MEAN_MODEL
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', type=str, default=CNN_MODEL)
     parser.add_argument('--batches', type=int, default=500000)
@@ -26,26 +25,28 @@ if __name__ == '__main__':
     parser.add_argument('--n_kernel', type=int, default=64)
 
     config = vars(parser.parse_args())
+    config["learning_rate"] = config["lr"]  # for compatibility with tests
 
-    # config = {
-    #     "model": CNN_MODEL,
-    #     "batches": 500000,
-    #     "batch_size": 33,
-    #     "lr": 0.0001,
-    #     "activation": "relu",
-    #
-    #     "gradient_clip": 0.5,
-    #
-    #     "proj_size": 100,
-    #     "seq_len": 100,
-    #     "vocab_size": 20000,
-    #     "emb_training": False,
-    #     "random_emb": False,
-    #     "emb_projection": True,
-    #     "device": "cpu",
-    #
-    #     "cnn_architecture": "C",
-    #     "n_kernel": 64,
-    #
-    # }
+    config = {
+        "model": CNN_MODEL,
+        "batches": 500000,
+        "batch_size": 33,
+        "lr": 0.0001,
+        "activation": "relu",
+
+        "gradient_clip": 0.5,
+
+        "proj_size": 100,
+        "seq_len": 100,
+        "vocab_size": 20000,
+        "emb_training": False,
+        "random_emb": False,
+        "emb_projection": True,
+        "device": "cpu",
+
+        "cnn_architecture": "C",
+        "n_kernel": 64,
+
+    }
     main(config)
+
