@@ -17,7 +17,6 @@ prepare_cv02 ()
   echo "Preparing unittests for CV2"
   rm cv02/consts.py
   cp ~/consts.py cv02/consts.py
-  cp ~/fasttext_cc.cs.300.vec fasttext_cc.cs.300.vec
   echo "... cv02 prepared ..."
 }
 
@@ -26,7 +25,6 @@ prepare_cv03 ()
   echo "Preparing unittests for CV3"
   rm cv02/consts.py
   cp ~/consts.py cv02/consts.py
-  cp ~/fasttext_cc.cs.300.vec fasttext_cc.cs.300.vec
   echo "... cv03 prepared ..."
 }
 
