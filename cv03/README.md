@@ -241,7 +241,7 @@ I have tuned parameters below:
 | model          | cnn, mean                        |
 | cnn_config     | A, B, C                          |
 | n_kernel       | 64                               |
-| batches        | 2000, 1000, 5000, 10000, 50000   |
+| batches        | 1000, 2000, 5000, 10000, 50000   |
 | batch_size     | 32, 128                          |
 | activation     | relu, gelu                       |
 | lrs            | 0.001, 0.0001, 0.00001, 0.000001 |
@@ -257,7 +257,7 @@ Here is the parameter importance chart for all runs with final test accuracy abo
 
 ![img.png](img/img.png)
 
-For the models with final test accuracy above 0.5, embedding training seems to the most important parameter.
+For the models with final test accuracy above 0.5, embedding training seems to be the most important parameter.
 
 ![W&B Chart 4. 11. 2024 22_51_10.svg](img%2FW%26B%20Chart%204.%2011.%202024%2022_51_10.svg)
 
@@ -274,7 +274,7 @@ were too small and therefore the model learned too slowly. Figure for all mean r
 
 ![W&B Chart 4. 11. 2024 22_51_101.svg](img%2FW%26B%20Chart%204.%2011.%202024%2022_51_101.svg)
 
-Then the batches actually seem to be important. Here a started with too big values, so I reduced them to 2000, 1000
+Then the batches actually seem to be important. Here I started with too big values, so I reduced them to 2000, 1000
 later.
 Models with such big values just took too long to train, and maybe could have overfitted the data?
 Maybe the 1000 was a bit too small, but I think that the 2000 was a good compromise - enough to train the model well.
@@ -311,14 +311,14 @@ same.
 In the case of the CNN models, maybe the projection helps the model with feature extraction?
 
 Most of this "statistics" was done only on runs better than 0.6 final test accuracy. I also did not include that many
-figures form the W&B, since they are mostly made only form the first 50 runs, and that can be quite misleading.
+figures from the W&B, since they are mostly made only from the first 50 runs, and that can be quite misleading.
 
 # NOTE:
 
 I had major struggles with the WandB connection. The connection would break quite often, so most of my runs just timed
 out and exceeded the wall time.
 
-Yeah, this task was a technological hell for me. Now the kiv gitlab isn't working, so I can´t push my results. I really
+Yeah, this task was a technological hell for me. Now the kiv gitlab isn't working, so I can´t push my results. I am really
 frustrated.
 
 My biggest takeaway from this task is that I hate distributed computing. I miss the old PPA days, when I could see my results
