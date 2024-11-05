@@ -50,10 +50,15 @@ Tasks \[20+5 points in total\]
 - Coverage is ratio between tokens you have in your vocabulary and all tokens.
   Do not count pad tokens
 - Count statistics about class distribution in dataset (train/test)
+
   ![Train Sentiment Score Histogram.svg](img%2FTrain%20Sentiment%20Score%20Histogram.svg)
+
   ![Test Sentiment Score Histogram.svg](img%2FTest%20Sentiment%20Score%20Histogram.svg)
+
   As shown in the histograms, both train and test datasets are balanced.
+
   ![Train Text Length Histogram.svg](img%2FTrain%20Text%20Length%20Histogram.svg)
+
   The figure above shows the distribution of text lengths in the training dataset.
   This can really help with setting the sequence length for the model.
   I chose the sequence length to be 100, which corresponds to the 88th percentile of the text length distribution.
@@ -116,7 +121,9 @@ Primitives to use:
 **[5pt]**
 
 10. **Implement CNN Model**
+
     ![architectures](img/ANLP_cv_03.png)
+
     For implementing architecture of the model use configuration in form of list,
     where each item correspond to a setup of one layer of the model (prepared in **CF\#CNN_CONF**).
 
@@ -174,12 +181,17 @@ Sorry if this is confusing.
 
 Here is the parallel coordinate chart for runs with final test accuracy above 0.7. Interesting insight is that only
 some learning rates are present, meaning that only some learning rates performed well.
+
 ![W&B Chart 4. 11. 2024 21_21_27.svg](img%2FW%26B%20Chart%204.%2011.%202024%2021_21_27.svg)
+
 Here are only CNN runs with final test accuracy above 0.6. We can clearly see that the embedding projection
 helped these models. Otherwise, we can´t see much from this chart.
+
 ![W&B Chart 4. 11. 2024 21_21_2.svg](img%2FW%26B%20Chart%204.%2011.%202024%2021_21_2.svg)
+
 Here are only mean runs with final test accuracy above 0.71. Here is interesting that the embedding training
 seems to be important for the mean model.
+
 ![W&B Chart 4. 11. 2024 21_37_29.svg](img%2FW%26B%20Chart%204.%2011.%202024%2021_37_29.svg)
 
 ## Confusion matrix -- best run ##
@@ -208,7 +220,9 @@ are made from the "best runs" runs - over 20 repetitions for each.
 ![conf_matrix_mean.svg](img%2Fconf_matrix_mean.svg)
 
 ![conf_matrix_A.svg](img%2Fconf_matrix_A.svg)
+
 ![conf_matrix_B.svg](img%2Fconf_matrix_B.svg)
+
 ![conf_matrix_C.svg](img%2Fconf_matrix_C.svg)
 
 As visualized in the confusion matrices, all the models confuse the neutral class with the negative class the most.
@@ -240,9 +254,13 @@ I have tuned parameters below:
 
 I have initially overshot the number of batches, so I have reduced them to 2000, 1000 additionally later.
 Here is the parameter importance chart for all runs with final test accuracy above 0.5:
+
 ![img.png](img/img.png)
+
 For the models with final test accuracy above 0.5, embedding training seems to the most important parameter.
+
 ![W&B Chart 4. 11. 2024 22_51_10.svg](img%2FW%26B%20Chart%204.%2011.%202024%2022_51_10.svg)
+
 As I would expect, the embedding training gives better results than not training the embeddings.
 That intuitively makes sense to me, especially if the embeddings were not made specifically
 for the task at hand. However, I wouldn't expect that the embedding training would be the most important, since
@@ -253,6 +271,7 @@ best
 for this task with combination of other parameters. The smaller learning rates did not perform well, my guess is that
 they
 were too small and therefore the model learned too slowly. Figure for all mean runs:
+
 ![W&B Chart 4. 11. 2024 22_51_101.svg](img%2FW%26B%20Chart%204.%2011.%202024%2022_51_101.svg)
 
 Then the batches actually seem to be important. Here a started with too big values, so I reduced them to 2000, 1000
@@ -275,11 +294,13 @@ with architecture C was not that big (in the best runs C was the best - but agai
 architecture A was the worst, but I think that it was because of the small
 kernel size. The architecture A also took the longest to train, witch makes sense, since it had to make so many more
 "steps" in the convolutional layer.
+
 ![W&B Chart 5. 11. 2024 0_18_09.svg](img%2FW%26B%20Chart%205.%2011.%202024%200_18_09.svg)
 
 The activation function did not seem to be that important, but the relu activation function seemed to perform better.
 I would expect that the gelu activation function would perform better, since it is a more complex function, but
 they are quite similar.
+
 ![W&B Chart 5. 11. 2024 0_18_099.svg](img%2FW%26B%20Chart%205.%2011.%202024%200_18_099.svg)
 
 The embedding projection seems to be beneficial only for the CNN models, the mean models does not seem to care about it.
