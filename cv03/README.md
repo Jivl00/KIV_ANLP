@@ -295,8 +295,13 @@ figures form the W&B, since they are mostly made only form the first 50 runs, an
 # NOTE:
 
 I had major struggles with the WandB connection. The connection would break quite often, so most of my runs just timed
-out
-and exceeded the wall time.
+out and exceeded the wall time.
+
+Yeah, this task was a technological hell for me. Now the kiv gitlab isn't working, so I can´t push my results. I really
+frustrated.
+
+My biggest takeaway from this task is that I hate distributed computing. I miss the old PPA days, when I could see my results
+immediately. I have spent days here waiting for the runs to finish.
 
 # To Think About:
 
