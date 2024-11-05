@@ -133,8 +133,10 @@ Primitives to use:
 
     MANDATORY_HP = ["activation", "model", "random_emb", "emb_training", "emb_projection", "lr", "proj_size", "batch_size"]
     MANDATORY_HP_CNN = ["cnn_architecture", "n_kernel", "hidden_size"]
-    MANDATORY_M = ["train_acc", "test_loss", "train_loss"] 
+    MANDATORY_M = ["train_acc", "test_loss", "train_loss"]
+
 # NOTE:
+
 Here I struggled a bit with what the hidden_size should be and how to choose the size.
 I ended up choosing the sizes so that the unit tests would pass, so just few trials and errors.
 For the architecture B, I have changed the dimensions of the kernel to `config["proj_size"] // 2` to serve
@@ -169,25 +171,50 @@ named as test (used during training loop), and the test dataset is named as fina
 Sorry if this is confusing.
 
 ### Parallel Coordinate Chart
+
 Here is the parallel coordinate chart for runs with final test accuracy above 0.7. Interesting insight is that only
 some learning rates are present, meaning that only some learning rates performed well.
 ![W&B Chart 4. 11. 2024 21_21_27.svg](img%2FW%26B%20Chart%204.%2011.%202024%2021_21_27.svg)
-Here are only CNN runs with final test accuracy above 0.6. We can clearly see that the embedding projection 
+Here are only CNN runs with final test accuracy above 0.6. We can clearly see that the embedding projection
 helped these models. Otherwise, we can´t see much from this chart.
 ![W&B Chart 4. 11. 2024 21_21_2.svg](img%2FW%26B%20Chart%204.%2011.%202024%2021_21_2.svg)
 Here are only mean runs with final test accuracy above 0.71. Here is interesting that the embedding training
 seems to be important for the mean model.
 ![W&B Chart 4. 11. 2024 21_37_29.svg](img%2FW%26B%20Chart%204.%2011.%202024%2021_37_29.svg)
 
-TODO: Best models
-
 ## Confusion matrix -- best run ##
 
-__MISSING__
+Best for each architecture are:
+
+| Model Type | CNN Architecture | Batches | Batch Size | Learning Rate | Activation | Hidden Size | Number of Params | Accuracy (mean+-std) |
+|------------|------------------|---------|------------|---------------|------------|-------------|------------------|----------------------|
+| Mean       | N/A              | 2000    | 128        | 0.001         | gelu       | N/A         | 6,031,003        | 0.75 +- 0.002        |
+| CNN        | A                | 2000    | 128        | 0.0001        | relu       | 500         | 15,633,471       | 0.64 +- 0.007        |
+| CNN        | B                | 1000    | 128        | 0.001         | relu       | 970         | 15,561,815       | 0.72 +- 0.008        |
+| CNN        | C                | 10000   | 128        | 0.0001        | relu       | 35,020      | 12,952,415       | 0.73 +- 0.004        |
+
+Some common hyperparameters for all runs:
+`proj_size: 100
+seq_len: 100
+vocab_size: 20000
+emb_training: True
+random_emb: False
+emb_projection: True`
+
+These hyperparameters were chosen based on the final test accuracy for runs grouped by their name - configuration. The
+provided final test accuracies
+are made from the "best runs" runs - over 20 repetitions for each.
+
+![conf_matrix_mean.svg](img%2Fconf_matrix_mean.svg)
+
+![conf_matrix_A.svg](img%2Fconf_matrix_A.svg)
+![conf_matrix_B.svg](img%2Fconf_matrix_B.svg)
+![conf_matrix_C.svg](img%2Fconf_matrix_C.svg)
+
+As visualized in the confusion matrices, all the models confuse the neutral class with the negative class the most.
+The CNN architecture A also misclassified the neutral class as positive quite often.
 
 ### Discussion
-
-_MISSING_
 
 Which hyperparameters did I tune?
 Which had the greatest influence?
@@ -195,21 +222,21 @@ Have I used other techniques to stabilize the training, and did I get better res
 
 I have tuned parameters below:
 
-| Parameter       | Values                              |
-|-----------------|-------------------------------------|
-| model           | cnn, mean                           |
-| cnn_config      | A, B, C                             |
-| n_kernel        | 64                                  |
-| batches         | 2000, 1000, 5000, 10000, 50000      |
-| batch_size      | 32, 128                             |
-| activation      | relu, gelu                          |
-| lrs             | 0.001, 0.0001, 0.00001, 0.000001    |
-| random_emb      | False, True                         |
-| emb_training    | False, True                         |
-| emb_projection  | False, True                         |
-| vocab_size      | 20000                               |
-| proj_size       | 100                                 |
-| seq_len         | 100                                 |
+| Parameter      | Values                           |
+|----------------|----------------------------------|
+| model          | cnn, mean                        |
+| cnn_config     | A, B, C                          |
+| n_kernel       | 64                               |
+| batches        | 2000, 1000, 5000, 10000, 50000   |
+| batch_size     | 32, 128                          |
+| activation     | relu, gelu                       |
+| lrs            | 0.001, 0.0001, 0.00001, 0.000001 |
+| random_emb     | False, True                      |
+| emb_training   | False, True                      |
+| emb_projection | False, True                      |
+| vocab_size     | 20000                            |
+| proj_size      | 100                              |
+| seq_len        | 100                              |
 
 I have initially overshot the number of batches, so I have reduced them to 2000, 1000 additionally later.
 Here is the parameter importance chart for all runs with final test accuracy above 0.5:
@@ -221,12 +248,15 @@ That intuitively makes sense to me, especially if the embeddings were not made s
 for the task at hand. However, I wouldn't expect that the embedding training would be the most important, since
 I assume that the embeddings were at least somewhat good, so not that much training would be nessesary.
 
-Second big factor was as in previous exercises the learning rate. The learning rates of 0.001 and 0.0001 seems to be the best
-for this task with combination of other parameters. The smaller learning rates did not perform well, my guess is that they
+Second big factor was as in previous exercises the learning rate. The learning rates of 0.001 and 0.0001 seems to be the
+best
+for this task with combination of other parameters. The smaller learning rates did not perform well, my guess is that
+they
 were too small and therefore the model learned too slowly. Figure for all mean runs:
 ![W&B Chart 4. 11. 2024 22_51_101.svg](img%2FW%26B%20Chart%204.%2011.%202024%2022_51_101.svg)
 
-Then the batches actually seem to be important. Here a started with too big values, so I reduced them to 2000, 1000 later.
+Then the batches actually seem to be important. Here a started with too big values, so I reduced them to 2000, 1000
+later.
 Models with such big values just took too long to train, and maybe could have overfitted the data?
 Maybe the 1000 was a bit too small, but I think that the 2000 was a good compromise - enough to train the model well.
 It is hard to tell for me, since as I will mention later, my major struggle was with the WandB connection. The longer
@@ -238,9 +268,11 @@ seem to perform better (0.71 vs 0.65 final test accuracy for runs with final tes
 surprising to me, maybe if I tuned the CNN models more? Nevertheless, in the unit tests, the mean models are tested
 for better accuracy, so I guess my intuition was just wrong.
 
-As for the CNN architectures, I expected that the architecture B would perform the best, since it is a compromise between
+As for the CNN architectures, I expected that the architecture B would perform the best, since it is a compromise
+between
 the two other architectures. Here my intuition was right, the architecture B performed the best, but the difference
-with architecture C was not that big. The architecture A was the worst, but I think that it was because of the small
+with architecture C was not that big (in the best runs C was the best - but again very similar accuracy with B). The
+architecture A was the worst, but I think that it was because of the small
 kernel size. The architecture A also took the longest to train, witch makes sense, since it had to make so many more
 "steps" in the convolutional layer.
 ![W&B Chart 5. 11. 2024 0_18_09.svg](img%2FW%26B%20Chart%205.%2011.%202024%200_18_09.svg)
@@ -251,18 +283,21 @@ they are quite similar.
 ![W&B Chart 5. 11. 2024 0_18_099.svg](img%2FW%26B%20Chart%205.%2011.%202024%200_18_099.svg)
 
 The embedding projection seems to be beneficial only for the CNN models, the mean models does not seem to care about it.
-As for the mean models, it makes sense to me, since they just average the embeddings "information" projected or not - the 
-projection just transforms the embeddings, maybe reducing the dimensionality but the "average information" is still the same.
+As for the mean models, it makes sense to me, since they just average the embeddings "information" projected or not -
+the
+projection just transforms the embeddings, maybe reducing the dimensionality but the "average information" is still the
+same.
 In the case of the CNN models, maybe the projection helps the model with feature extraction?
-
-
 
 Most of this "statistics" was done only on runs better than 0.6 final test accuracy. I also did not include that many
 figures form the W&B, since they are mostly made only form the first 50 runs, and that can be quite misleading.
 
 # NOTE:
-I had major struggles with the WandB connection. The connection would break quite often, so most of my runs just timed out
+
+I had major struggles with the WandB connection. The connection would break quite often, so most of my runs just timed
+out
 and exceeded the wall time.
+
 # To Think About:
 
 ## Practical Question
