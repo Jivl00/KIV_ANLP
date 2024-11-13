@@ -361,8 +361,122 @@ Analyse the dataset - write the results into the discussion (secion 1). Answer a
 ## Discussions
 
 ### Section 1 - Dataset Analysis
+1. What labels are used by both datasets - write a complete list and explanation of the labels (use the referenced dataset websited).
+    
 
-[TODO]
+    NER dataset - CNEC:
+    O       -- Outside of a named entity
+    I-T     -- Inside of a named entity Time expressions
+    I-P     -- Inside of a named entity Personal names
+    I-O     -- Inside of a named entity Artifact names
+    I-M     -- Inside of a named entity Media names
+    I-I     -- Inside of a named entity Institutions
+    I-G     -- Inside of a named entity Geographical names
+    I-A     -- Inside of a named entity Numbers in addresses
+    B-T     -- Beginning of a named entity Time expressions
+    B-P     -- Beginning of a named entity Personal names
+    B-O     -- Beginning of a named entity Artifact names
+    B-M     -- Beginning of a named entity Media names
+    B-I     -- Beginning of a named entity Institutions
+    B-G     -- Beginning of a named entity Geographical names
+    B-A     -- Beginning of a named entity Numbers in addresses
+
+_
+
+
+    TAGGING dataset - UD:
+    ADJ     -- Adjective
+    ADP     -- Adposition
+    ADV     -- Adverb
+    AUX     -- Auxiliary
+    CCONJ   -- Coordinating conjunction
+    DET     -- Determiner
+    INTJ    -- Interjection
+    NOUN    -- Noun
+    NUM     -- Numeral
+    PART    -- Particle
+    PRON    -- Pronoun
+    PROPN   -- Proper noun
+    PUNCT   -- Punctuation
+    SCONJ   -- Subordinating conjunction
+    SYM     -- Symbol
+    VERB    -- Verb
+    X       -- Other
+    _       -- No label? What I found in the data: aby, abychom, abyste, _
+
+
+2. How large are the two datasets (train, eval, test, overall).
+
+Code details for this and following questions can be found in the `data_anal.py` file.
+
+
+    NER dataset - CNEC:
+    Train:  4688
+    Dev:    577
+    Test:   585
+    Overall: 5850
+
+    TAGGING dataset - UD:
+    Train:  103143
+    Dev:    11326
+    Test:   12216
+    Overall: 126685
+
+As we can see, the second dataset is significantly larger than the first one.
+
+3. What is the average length of a training example for the individual datasets - in number of whole words tokens as pre-tokenized in the dataset files.
+
+
+    NER dataset - CNEC:
+    Train:  25.5
+    Dev:    25.6
+    Test:   25.7
+
+    TAGGING dataset - UD:
+    Train: 17.6 
+    Dev:   17.0 
+    Test:  16.9
+
+
+4. What is the average length of a token for the individual datasets - in number of subword tokens when using `tokenizer = transformers.BertTokenizerFast.from_pretrained("UWB-AIR/Czert-B-base-cased")` - documentation: https://huggingface.co/docs/transformers/main_classes/tokenizer#transformers.PreTrainedTokenizer (methods: encode or batch_encode).
+
+
+    NER dataset - CNEC:
+    Train:  35.6
+    Dev:    35.8
+    Test:   36.1
+
+    TAGGING dataset - UD:
+    Train:  23.4
+    Dev:    22.4
+    Test:   22.3
+
+
+5. Count statistics about class distribution in dataset (train/dev/test) for the individual datasets.
+
+![train.txt_CNEC_class_distribution.svg](img%2Ftrain.txt_CNEC_class_distribution.svg)
+![dev.txt_CNEC_class_distribution.svg](img%2Fdev.txt_CNEC_class_distribution.svg)
+![test.txt_CNEC_class_distribution.svg](img%2Ftest.txt_CNEC_class_distribution.svg)
+
+
+![train.txt_UD_class_distribution.svg](img%2Ftrain.txt_UD_class_distribution.svg)
+![dev.txt_UD_class_distribution.svg](img%2Fdev.txt_UD_class_distribution.svg)
+![test.txt_UD_class_distribution.svg](img%2Ftest.txt_UD_class_distribution.svg)
+
+
+6. Based on the statistic from the questions above - are the individual datasets balanced or unbalanced? In case at least one of the dataset is unbalanced, are there any implications for the model/solution or is there anything we should be aware of?
+
+Both datasets are unbalanced. The NER dataset is more unbalanced than the TAGGING dataset.
+This is because the NER dataset has a lot of O labels, which can be expected, as the majority of the words are not named entities.
+The tagging dataset is more balanced, but still, some classes are more frequent than others (e.g. NOUN, VERB, PUNCT). This can be expected, as some classes are more common in the language than others.
+
+
+The unbalanced dataset can lead to the model learning to always output the majority class, which can be a problem in the case of unbalanced classification.
+Traditional metrics like accuracy can be misleading on unbalanced datasets, as they may not reflect the model's performance on minority classes.
+Metrics such as F1-score, particularly the macro-averaged F1-score or per-class F1-scores, are more informative because they measure performance on each class separately and help assess how well the model identifies less frequent labels.
+Adjusting class weights during training can help mitigate the imbalance by giving more importance to minority classes. 
+
+
 
 ### Section 2 - RNN Model
 
