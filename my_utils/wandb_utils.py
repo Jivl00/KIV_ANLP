@@ -162,7 +162,7 @@ def load_runs(tags :tuple, mandatory_hp=None, mandatory_m=None, minimum_runtime_
 
         logging.debug("--ok")
 
-    print(f"=============================\nUsing {len(df)}/{runs_all} runs\n You can use logging:debug for more info", file=sys.stderr)
+    # print(f"=============================\nUsing {len(df)}/{runs_all} runs\n You can use logging:debug for more info", file=sys.stderr)
 
     return df
 

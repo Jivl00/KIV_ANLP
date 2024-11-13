@@ -262,11 +262,22 @@ class RNN(torch.nn.Module):
         self._hidden_states = []
 
         # TODO START
-        self._embedding_layer = ...
-        self._loss = ...
-        self._dropout_layer = ...
-        self._new_hidden_state_layer = ...
-        self._output_layer = ...
+        self._embedding_layer = torch.nn.Embedding(
+            num_embeddings=self.__vocab_size,
+            embedding_dim=self.__embedding_dimension
+        )
+        self._loss = torch.nn.CrossEntropyLoss()
+        self._dropout_layer = torch.nn.Dropout(p=self.__dropout_prob)
+        self._new_hidden_state_layer = torch.nn.Linear(
+            in_features=self.__embedding_dimension + self.__rnn_hidden_size,
+            out_features=self.__rnn_hidden_size,
+            bias=self.__use_bias
+        )
+        self._output_layer = torch.nn.Linear(
+            in_features=self.__rnn_hidden_size,
+            out_features=self._num_labels,
+            bias=self.__use_bias
+        )
         # TODO END
 
         if freeze_embedding_layer:
@@ -305,11 +316,19 @@ class RNN(torch.nn.Module):
         self.__init_zero_hidden(input_ids.shape[0])
         # TODO START
         # embeddings and dropouts
+        embeddings = self._embedding_layer(input_ids)
+        embeddings = self._dropout_layer(embeddings)
         # iteration over the individual tokens generating a sequence of hidden states (in a loop)
-        # preserve all the hidden states
+        for t in range(embeddings.shape[1]):
+            input_t = embeddings[:, t, :]
+            self.__hidden_state = torch.tanh(self._new_hidden_state_layer(torch.cat((input_t, self.__hidden_state), dim=1)))
+            # preserve all the hidden states
+            self._hidden_states.append(self.__hidden_state.clone())
         # create a single tensor of all the hidden states
+        hidden_states = torch.stack(self._hidden_states, dim=1)
+        hidden_states = self._dropout_layer(hidden_states)
         # apply output layer with softmax over the hidden states
-        logits = ...  # model outputs to be used to compute the loss
+        logits = self._output_layer(hidden_states)  # model outputs to be used to compute the loss
         # TODO END
         loss = self._loss(logits.view(-1, self._num_labels), labels.view(-1))
         out = TokenClassifierOutput(logits=logits, loss=loss)
@@ -366,12 +385,30 @@ class LSTM(torch.nn.Module):
         self.__l2_alpha = l2_alpha
 
         # TODO START
-        self._loss = ...
-        self._embedding_layer = ...
-        self._lstm = ...  # don't forget to use BiLSTM
-        self._dropout_layer = ...
-        self._dense = ...
-        self._classification_head = ...
+        self._loss = torch.nn.CrossEntropyLoss()
+        self._embedding_layer = torch.nn.Embedding(
+            num_embeddings=self.__vocab_size,
+            embedding_dim=self.__embedding_dimension
+        )
+        # self._lstm = ...  # don't forget to use BiLSTM
+        self._lstm = torch.nn.LSTM(
+            input_size=self.__embedding_dimension,
+            hidden_size=self.__lstm_hidden_size,
+            num_layers=self.__lstm_layers,
+            batch_first=True,
+            bidirectional=True
+        )
+        self._dropout_layer = torch.nn.Dropout(p=self.__dropout_prob)
+        self._dense = torch.nn.Linear(
+            in_features=self.__lstm_hidden_size * 2, # *2 because of BiLSTM
+            out_features=self.__lstm_hidden_size * 2,
+            bias=self.__use_bias
+        )
+        self._classification_head = torch.nn.Linear(
+            in_features=self.__lstm_hidden_size * 2,
+            out_features=self._num_labels,
+            bias=self.__use_bias
+        )
         # TODO END
 
         if freeze_first_x_layers > 0:
@@ -434,11 +471,17 @@ class LSTM(torch.nn.Module):
 
         # TODO START
         # apply embeddings and dropouts
+        embeddings = self._embedding_layer(input_ids)
+        embeddings = self._dropout_layer(embeddings)
         # BiLSTM
+        lstm_out, _ = self._lstm(embeddings)
         # Dropout
+        lstm_out = self._dropout_layer(lstm_out)
         # Dense layer with ReLu
+        lstm_out = torch.relu(self._dense(lstm_out))
         # Output layer with Softmax
-        logits = ...  # model outputs to be used to compute the loss
+        logits = self._classification_head(lstm_out)
+        # model outputs to be used to compute the loss
         # TODO END
         loss = self._loss(logits.view(-1, self._num_labels), labels.view(-1))
         out = TokenClassifierOutput(logits=logits, loss=loss)

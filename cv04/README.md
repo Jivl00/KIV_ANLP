@@ -474,11 +474,25 @@ Adjusting class weights during training can help mitigate the imbalance by givin
 
 ### Section 2 - RNN Model
 
-[TODO]
+![img.png](img%2Fimg.png)
+
+where:
+- `U` is the weight matrix for the input(`x_t`)-to-hidden connections
+- `V` is the weight matrix for the hidden-to-hidden (recurrent) connections
+- `b_h` is the bias term for the hidden layer
+- `W` is the weight matrix for the hidden-to-output connections
+- `b_y` is the bias term for the output layer
 
 ### Section 3 - LSTM Model
+![img2.png](img%2Fimg2.png)
+![img_1.png](img%2Fimg_1.png)
 
-[TODO]
+An LSTM model maintains a cell state `c_t` and a hidden state `h_t` at each time step `t`.
+The LSTM cell uses four main components—an input gate `i`, forget gate `f`, output gate `o`, and a candidate cell state to control information flow and update these states.
+
+* The forget gate decides how much of the previous cell state `c_{t-1}` should be "forgotten" or retained. Values close to 0 indicate that the cell state should be forgotten, while values close to 1 indicate that the cell state should be retained.
+* The input gate decides how much of the candidate cell state `c_tilde` to add to the cell state. The candidate cell state represents the new information that the model wants to add to the cell state.
+* The output gate decides how much of the cell state to output as the hidden state `h_t`. 
 
 ### Section 4 - Parameter Freezing & L2 Regularization
 
