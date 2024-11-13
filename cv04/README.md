@@ -361,8 +361,10 @@ Analyse the dataset - write the results into the discussion (secion 1). Answer a
 ## Discussions
 
 ### Section 1 - Dataset Analysis
+
 1. What labels are used by both datasets - write a complete list and explanation of the labels (use the referenced dataset websited).
 
+---
 
     NER dataset - CNEC:
     O       -- Outside of a named entity
@@ -423,6 +425,7 @@ As we can see, the second dataset is significantly larger than the first one.
 
 3. What is the average length of a training example for the individual datasets - in number of whole words tokens as pre-tokenized in the dataset files.
 
+---
 
     NER dataset - CNEC:
     Train:  25.5
@@ -436,6 +439,7 @@ As we can see, the second dataset is significantly larger than the first one.
 
 4. What is the average length of a token for the individual datasets - in number of subword tokens when using `tokenizer = transformers.BertTokenizerFast.from_pretrained("UWB-AIR/Czert-B-base-cased")` - documentation: https://huggingface.co/docs/transformers/main_classes/tokenizer#transformers.PreTrainedTokenizer (methods: encode or batch_encode).
 
+---
 
     NER dataset - CNEC:
     Train:  35.6
