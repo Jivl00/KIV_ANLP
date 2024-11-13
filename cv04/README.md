@@ -506,7 +506,9 @@ I think that randomly initialized embeddings do not carry any useful language in
 
 ### Section 5 - LR Schedule
 
-[TODO]
+Learning rate (LR) schedulers can significantly impact model performance by adjusting the learning rate dynamically during training.
+Warmup stabilizes training by preventing large, potentially destabilizing updates early on, allowing the model to ease into the learning process and establish robust initial representations.
+Decay helps the model converge to a stable minimum, prevents oscillation around local minima.
 
 ### Section 6 - Basic Experiments Results
 

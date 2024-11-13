@@ -147,6 +147,10 @@ def lr_schedule(step: int, warmup_steps: int, total_steps: int) -> float:
     # Compute a factor for LR at the current step in interval [0, 1]
     # Use linear warmup during warmup_steps and then a linear decay to 0 (from warmup_steps to total_steps)
     # return a float number in [0, 1]
+    if step < warmup_steps:  # warmup
+        return step / warmup_steps
+    else:  # decay
+        return (total_steps - step) / (total_steps - warmup_steps)
     # TODO END
 
 
@@ -168,7 +172,9 @@ def main():
         level=logging.INFO if training_args.local_rank in [-1, 0] else logging.WARN,
     )
 
-    compute_metrics = lambda pred, lab: compute_metrics_ner(pred, lab) if model_args.task == "NER" else compute_metrics_tagging(pred, lab)
+    compute_metrics = lambda pred, lab: compute_metrics_ner(pred,
+                                                            lab) if model_args.task == "NER" else compute_metrics_tagging(
+        pred, lab)
 
     # Check the selected model type
     if model_args.model_type not in MODEL_TYPES:
@@ -531,4 +537,3 @@ if __name__ == "__main__":
     # wandb.define_metric("eval_f1", summary="max")
 
     main()
-
