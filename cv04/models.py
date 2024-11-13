@@ -11,6 +11,12 @@ def compute_l2_norm_matching(model, patterns):
     """
     # TODO START
     # Compute sum of l2 norms of all parameters whose name matches at least one patter from patterns
+    l2_norm = 0
+    for name, param in model.named_parameters():
+        if any(pattern in name for pattern in patterns):
+            l2_norm += torch.norm(param, p=2)
+
+    return l2_norm
     # TODO END
 
 
@@ -296,7 +302,8 @@ class RNN(torch.nn.Module):
         :return: L2 norm value
         """
         # TODO START
-        return compute_l2_norm_matching(self, ...) * ...
+        patterns = ["_new_hidden_state_layer", "_output_layer"]
+        return compute_l2_norm_matching(self, patterns) * self.__l2_alpha
         # TODO END
 
     def forward(self,
@@ -350,6 +357,9 @@ class RNN(torch.nn.Module):
         # TODO START
         # freeze embedding layer
         #  - iterate over all parameters and set x.requires_grad = False for the embedding weights
+        for name, param in self._embedding_layer.named_parameters():
+            param.requires_grad = False
+
         # TODO END
 
 
@@ -443,6 +453,8 @@ class LSTM(torch.nn.Module):
         # TODO START
         # freeze embedding layer
         #  - iterate over all parameters and set x.requires_grad = False for the embedding weights
+        for name, param in self._embedding_layer.named_parameters():
+            param.requires_grad = False
         # TODO END
 
     def compute_l2_norm(self):
@@ -451,7 +463,8 @@ class LSTM(torch.nn.Module):
         :return: L2 norm value
         """
         # TODO START
-        return compute_l2_norm_matching(self, ...) * ...
+        patterns = ["_dense", "_classification_head"]
+        return compute_l2_norm_matching(self, patterns) * self.__l2_alpha
         # TODO END
 
     def forward(self,

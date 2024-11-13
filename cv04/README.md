@@ -496,7 +496,13 @@ The LSTM cell uses four main components—an input gate `i`, forget gate `f`, ou
 
 ### Section 4 - Parameter Freezing & L2 Regularization
 
-[TODO]
+If the embedding layer is initialized with pretrained embeddings (e.g., word embeddings from Word2Vec, GloVe, or BERT embeddings), freezing the embedding layer can help retain this pretrained knowledge, especially when labeled data is limited.
+In cases where the dataset is small or very domain-specific, freezing pretrained embeddings can reduce the risk of overfitting and preserve general language representations that might be useful in such specialized contexts.
+Freezing the embedding layer also reduces the number of parameters that need to be updated, which can lead to faster training and lower memory usage. This is useful when computational resources are limited, and the embeddings already provide strong language representations.
+
+In the scenario where the embedding layer is initialized randomly, I would expect that freezing the embedding layer would not be beneficial.
+I think that randomly initialized embeddings do not carry any useful language information; they are simply vectors of random values. If frozen, these embeddings would remain random and uninformative throughout training, leading to poor model performance.
+
 
 ### Section 5 - LR Schedule
 
