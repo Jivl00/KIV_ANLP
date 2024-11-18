@@ -46,6 +46,6 @@ eval prepare_$OLD_ASSIGNMENT_TO_RUN
 eval prepare_$ASSIGNMENT_TO_RUN
 
 # run the tests
-# python3 -m unittest test_`echo $OLD_ASSIGNMENT_TO_RUN`.py
+python3 -m unittest test_`echo $OLD_ASSIGNMENT_TO_RUN`.py
 python3 -m unittest test_`echo $ASSIGNMENT_TO_RUN`.py
 exit $?
