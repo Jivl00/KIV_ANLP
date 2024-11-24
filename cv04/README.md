@@ -558,6 +558,11 @@ be even better with better regularization.
 ![NER_2.1.svg](img%2FNER_2.1.svg)
 
 #### Discussion for TAGGING
+The scenario for the TAGGING task is similar to the NER task.
+The CZERT and Slavic models are having the best performance, this time closely followed by the LSTM model.
+![TAG_all.svg](img%2FTAG_all.svg)
+
+
 
 ### Section 7 - Extended Experiments Results (Bonus)
 
