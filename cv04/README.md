@@ -596,7 +596,31 @@ in my opinion more related to the language itself than the NER task.
 
 ### Section 7 - Extended Experiments Results (Bonus)
 
-[TODO] (optional)
+-- Embedding layer freezing
+Freezing the embedding layer did not have a significant impact on the model's performance.
+The model with frozen embeddings achieved a test F1 score of 0.8572, while the model with trainable embeddings achieved 
+a test F1 score of 0.856. This suggests that the embeddings already encode rich syntactic and semantic information, which 
+might be sufficient for the NER task.
+
+-- Freezing layers of the CZERT model + freeze embeddings
+The results suggest that the model benefits most from freezing the first two layers of the CZERT model,
+achieving a test F1 score of 0.86. Freezing more layers did not improve the model's performance, quite the contrary, 
+models with 4 and 6 frozen layers performed worse (0.85 and 0.84 F1 score) than the model with no frozen layers (0.857 F1 score).
+Freezing the first two layers likely helps in retaining the general language understanding captured during pre-training,
+which is useful for the NER task. However, freezing more layers might hinder the model's ability to adapt to the specific
+task, leading to decreased performance.
+
+![CZERT.svg](img%2FCZERT.svg)
+
+As for the combination with freezing the embeddings, it seems that freezing the embeddings is beneficial for all models 
+as before. The already stored information in the embeddings plus in the lower layers of the model helps the model to
+perform better - probably good generalization ability.
+
+-- BERT model - how well does a pre-trained model for English perform on a Czech tasks?
+
+
+
+
 
 ## Questions to think about (test preparation, better understanding):
 
