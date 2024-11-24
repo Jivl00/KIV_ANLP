@@ -511,8 +511,53 @@ Warmup stabilizes training by preventing large, potentially destabilizing update
 Decay helps the model converge to a stable minimum, prevents oscillation around local minima.
 
 ### Section 6 - Basic Experiments Results
+#### Discussion for NER
 
-[TODO]
+As we can see both CZERT and Slavic models outperform RNN and LSTM models. This is expected as
+the pre-trained models had more data to learn from and were trained on a larger corpus (must be of course relevant).
+
+![par_all.svg](img%2Fpar_all.svg)
+
+The LSTM model was doing better than the RNN model - as expected.
+The RNN model, while capable of capturing sequential dependencies, often struggles with long-term dependencies due to the
+vanishing gradient problem. This can lead to suboptimal performance on tasks like NER, where context from distant tokens can be crucial.
+The LSTM model, with its gating mechanisms, is better equipped to handle long-term dependencies. This typically results in 
+better performance compared to RNNs on tasks requiring understanding of context over longer sequences.
+
+![NER1.svg](img%2FNER1.svg)
+
+As for the tuned hyperparameters, the `--no_bias` does not seem to have a significant impact on the model's performance.
+Models with `--no_bias:false` were slightly better 0.4549 vs 0.4526 on the test F1 score. Also, the trends in the graphs
+were almost identical.
+
+The learning rate `0.001` was better than `0.0001` for both models. It is likely that the higher learning rate allowed
+the model to converge faster.
+
+![NER_lr.svg](img%2FNER_lr.svg)
+
+The L2 alpha `0.01` slightly worse than `0` for both models. This came as a surprise, as L2 regularization is typically
+used to prevent overfitting and improve generalization. It is possible that the L2 regularization was too strong? (but 0.0001 is quite low)
+
+![NER_l2.svg](img%2FNER_l2.svg)
+
+Below we can clearly see that the overfitting is present and therefore the L2 regularization should be used.
+
+![NER_l2loss.svg](img%2FNER_l2loss.svg)
+
+As mentioned both CZERT and Slavic models outperform RNN and LSTM models. CZERT, being a pre-trained transformer model
+specifically designed for the Czech language, leverages large amounts of pre-training data. This allows it to capture
+nuanced language patterns and context. Similar to CZERT, the Slavic model is pre-trained on Slavic languages, making it
+adept at understanding the linguistic characteristics of these languages. Its performance on NER tasks is expected to be 
+comparable to or slightly lower than CZERT, depending on the specific pre-training data and fine-tuning process.
+Results suggest that it is indeed the truth as the Slavic reached 0.85 F1 score on the test set and CZERT 0.86.
+However, the graphs below suggest that the CZERT was starting to overfit the training data - so its performance might
+be even better with better regularization.
+
+![NER_2.svg](img%2FNER_2.svg)
+
+![NER_2.1.svg](img%2FNER_2.1.svg)
+
+#### Discussion for TAGGING
 
 ### Section 7 - Extended Experiments Results (Bonus)
 
