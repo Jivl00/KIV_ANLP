@@ -597,12 +597,14 @@ in my opinion more related to the language itself than the NER task.
 ### Section 7 - Extended Experiments Results (Bonus)
 
 -- Embedding layer freezing
+
 Freezing the embedding layer did not have a significant impact on the model's performance.
 The model with frozen embeddings achieved a test F1 score of 0.8572, while the model with trainable embeddings achieved 
 a test F1 score of 0.856. This suggests that the embeddings already encode rich syntactic and semantic information, which 
 might be sufficient for the NER task.
 
 -- Freezing layers of the CZERT model + freeze embeddings
+
 The results suggest that the model benefits most from freezing the first two layers of the CZERT model,
 achieving a test F1 score of 0.86. Freezing more layers did not improve the model's performance, quite the contrary, 
 models with 4 and 6 frozen layers performed worse (0.85 and 0.84 F1 score) than the model with no frozen layers (0.857 F1 score).
@@ -618,8 +620,45 @@ perform better - probably good generalization ability.
 
 -- BERT model - how well does a pre-trained model for English perform on a Czech tasks?
 
+As expected, the BERT model, pre-trained on English data, did not perform well on Czech tasks, especially when compared to
+the CZERT and Slavic models. However, the BERT model achieved results that were better than the RNN and LSTM models.
+As for the tuned hyperparameters - freezing the embeddings and freezing the lower layers of the model - the results were
+similar to the CZERT model. This has surprised me, as the BERT model was pre-trained on English data, and I would expect
+that the model would not be able to benefit from the pre-trained lower layers. In general, I was pleasantly surprised by the
+results of the BERT model on Czech tasks.
 
+![BERT.svg](img%2FBERT.svg)
 
+-- Does the model with frozen embeddings perform worse than the model with trainable embeddings?
+
+Models with frozen embeddings performed better than models with trainable embeddings in all experiments.
+
+![d.svg](img%2Fd.svg)
+
+Freezing the embeddings is beneficial because the pre-trained embeddings already encode rich syntactic and semantic information.
+This helps the model maintain a strong foundation of language understanding, which is useful for both NER and TAGGING.
+When embeddings are frozen, the model can leverage this pre-existing knowledge without altering it, leading to better 
+performance. Additionally, freezing embeddings reduces the number of parameters that need to be updated during training,
+which can help prevent overfitting and improve generalization, especially when the training data is limited (not the case here
+especially for the tagging task).
+
+-- Do you see any result improvement/impairment when freezing the lower layers of the CZERT model?
+
+Yes, freezing the 2 lower layers of the CZERT model improved the model's performance, while freezing more layers impaired the model's performance.
+(see above)
+
+-- Does freezing the lower layers bring any benefits in term of results, speed of training, etc?
+
+Partially answered above. As for the speed of training, I would expect that freezing the lower layers would speed up training
+as fewer parameters need to be updated. The picture below shows that it might be true, but those were just some extreme cases
+(I don't even remember making those experiments). Without the extreme values, the speed of training was similar for all cases,
+but small trends can be seen.
+
+![dd.svg](img%2Fdd.svg)
+
+-- Does the BERT model work for Czech tasks? State the results and include a graph of eval metrics for the BERT model config for both tasks.
+
+Answered above.
 
 
 ## Questions to think about (test preparation, better understanding):
