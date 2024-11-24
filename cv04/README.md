@@ -650,7 +650,7 @@ Yes, freezing the 2 lower layers of the CZERT model improved the model's perform
 -- Does freezing the lower layers bring any benefits in term of results, speed of training, etc?
 
 Partially answered above. As for the speed of training, I would expect that freezing the lower layers would speed up training
-as fewer parameters need to be updated. The picture below shows that it might be true, but those were just some extreme cases
+as fewer parameters need to be updated. The picture below shows that it might not be true, but those were just some extreme cases
 (I don't even remember making those experiments). Without the extreme values, the speed of training was similar for all cases,
 but small trends can be seen.
 
