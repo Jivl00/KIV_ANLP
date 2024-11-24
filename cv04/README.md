@@ -560,8 +560,38 @@ be even better with better regularization.
 #### Discussion for TAGGING
 The scenario for the TAGGING task is similar to the NER task.
 The CZERT and Slavic models are having the best performance, this time closely followed by the LSTM model.
+In general all models are performing better on the TAGGING task than on the NER task.
+
 ![TAG_all.svg](img%2FTAG_all.svg)
 
+Performance of the RNN model is again worse than the LSTM model. The LSTM model is better at capturing long-term dependencies,
+which is crucial for tasks like morphological tagging that require understanding of context over longer sequences.
+
+![TAG1.svg](img%2FTAG1.svg)
+
+The `--no_bias` hyperparameter does not seem to have a significant impact in this case either.
+As for the learning rate, the `0.001` was better than `0.0001` for both models. The difference was less significant than in the NER task.
+
+![TAG2.svg](img%2FTAG2.svg)
+
+The L2 alpha `0.01` was slightly worse than `0` for both models. In this case, I see no signs of overfitting, so the L2 regularization might not be necessary
+in this case.
+
+![TAG3.svg](img%2FTAG3.svg)
+
+![TAG4.svg](img%2FTAG4.svg)
+
+As for the CZERT and Slavic models, the results clearly indicate that both models were overfitting the training data.
+In the graphs below, the model are intentionally not grouped - so we can see that the shorter training time
+was sufficient - in some cases maybe even lesser epochs would be enough. As for the model themselves, the CZERT
+was again slightly better than the Slavic model. In this case, it is even more intuitive as the tagging task is
+in my opinion more related to the language itself than the NER task.
+
+![TAG_1.svg](img%2FTAG_1.svg)
+
+![TAG_2.svg](img%2FTAG_2.svg)
+
+![TAG_3.svg](img%2FTAG_3.svg)
 
 
 ### Section 7 - Extended Experiments Results (Bonus)
