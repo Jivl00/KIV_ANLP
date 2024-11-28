@@ -27,11 +27,11 @@ class RegressionModel(nn.Module):
 
 def main(config):
     # wandb.init(project=WANDB_PROJECT, entity=WANDB_ENTITY, tags=["cv05", "best"], config=config)
-    # wandb.init(project=WANDB_PROJECT, entity=WANDB_ENTITY, tags=["cv05"], config=config)
-    # if config["task"] == "sts":
-    #     wandb.log({"test_loss": None, "train_loss": None})
-    # if config["task"] == "sentiment":
-    #     wandb.log({"test_loss": None, "test_acc": None, "train_loss": None})
+    wandb.init(project=WANDB_PROJECT, entity=WANDB_ENTITY, tags=["cv05"], config=config)
+    if config["task"] == "sts":
+        wandb.log({"test_loss": None, "train_loss": None})
+    if config["task"] == "sentiment":
+        wandb.log({"test_loss": None, "test_acc": None, "train_loss": None})
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     tokenizer = AutoTokenizer.from_pretrained(config["model_type"])
@@ -100,7 +100,7 @@ def main(config):
                 total_loss += loss.item()
             train_loss = total_loss / len(sts_train_iterator)
             print(f"Train loss: {train_loss}")
-            # wandb.log({"train_loss": train_loss})
+            wandb.log({"train_loss": train_loss})
 
             model.eval()
             with torch.no_grad():
@@ -116,7 +116,7 @@ def main(config):
                     total_loss += loss.item()
                 test_loss = total_loss / len(sts_test_iterator)
                 print(f"Test loss: {test_loss}")
-                # wandb.log({"test_loss": test_loss})
+                wandb.log({"test_loss": test_loss})
 
     if config["task"] == "sentiment":
         model = AutoModelForSequenceClassification.from_pretrained(config["model_type"], num_labels=3)
@@ -137,15 +137,15 @@ def main(config):
             correct = 0
             total = 0
             for i, batch in enumerate(cls_train_iterator):
-                if i >= 5:
-                    break
-                print("Training")
+                # if i >= 5:
+                #     break
+                # print("Training")
                 texts = batch["text"]
                 labels = batch["label"].to(device)
                 optimizer.zero_grad()
                 encoded = tokenizer(texts, return_tensors="pt", padding=True, truncation=True, max_length=100).to(device)
                 output = model(**encoded)
-                loss = cross_entropy(output.logits, labels)
+                loss = cross_entropy(output.logits, labels.to(device))
                 loss.backward()
                 optimizer.step()
                 lr_scheduler.step()
@@ -156,7 +156,7 @@ def main(config):
             train_acc = correct / total
             train_loss = total_loss / total
             print(f"Train loss: {train_loss}, Train acc: {train_acc}")
-            # wandb.log({"train_loss": train_loss, "train_acc": train_acc})
+            wandb.log({"train_loss": train_loss, "train_acc": train_acc})
 
             model.eval()
             with torch.no_grad():
@@ -164,9 +164,9 @@ def main(config):
                 correct = 0
                 total = 0
                 for i, batch in enumerate(cls_test_iterator):
-                    if i >= 5:
-                        break
-                    print("Testing")
+                    # if i >= 5:
+                    #     break
+                    # print("Testing")
                     texts = batch["text"]
                     labels = batch["label"]
                     encoded = tokenizer(texts, return_tensors="pt", padding=True, truncation=True, max_length=100).to(device)
@@ -179,7 +179,7 @@ def main(config):
                 val_acc = correct / total
                 val_loss = total_loss / total
                 print(f"Val acc: {val_acc}, val loss: {val_loss}")
-                # wandb.log({"test_acc": val_acc, "train_loss": val_loss})
+                wandb.log({"test_acc": val_acc, "train_loss": val_loss})
 
 
 if __name__ == '__main__':
