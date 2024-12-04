@@ -21,8 +21,8 @@ class RegressionModel(nn.Module):
 
     def forward(self, input_ids, attention_mask):
         outputs = self.base_model(input_ids=input_ids, attention_mask=attention_mask)
-        pooled_output = outputs.last_hidden_state.mean(dim=1)
-        return self.regressor(pooled_output)
+        last_hidden_state = outputs.last_hidden_state
+        return self.regressor(last_hidden_state[:, 0, :]).squeeze(-1)
 
 
 def main(config):
@@ -59,10 +59,10 @@ def main(config):
         # test_dataset = TensorDataset(test_encodings['input_ids'], test_encodings['attention_mask'], test_labels)
 
         # Tokenize each sentence separately
-        train_encodings_1 = tokenizer(train_data[0].tolist(), return_tensors="pt", padding=True, truncation=True, max_length=100)
-        train_encodings_2 = tokenizer(train_data[1].tolist(), return_tensors="pt", padding=True, truncation=True, max_length=100)
-        test_encodings_1 = tokenizer(test_data[0].tolist(), return_tensors="pt", padding=True, truncation=True, max_length=100)
-        test_encodings_2 = tokenizer(test_data[1].tolist(), return_tensors="pt", padding=True, truncation=True, max_length=100)
+        train_encodings_1 = tokenizer(train_data[0].tolist(), return_tensors="pt", padding=True, truncation=True, max_length=config['seq_len'])
+        train_encodings_2 = tokenizer(train_data[1].tolist(), return_tensors="pt", padding=True, truncation=True, max_length=config['seq_len'])
+        test_encodings_1 = tokenizer(test_data[0].tolist(), return_tensors="pt", padding=True, truncation=True, max_length=config['seq_len'])
+        test_encodings_2 = tokenizer(test_data[1].tolist(), return_tensors="pt", padding=True, truncation=True, max_length=config['seq_len'])
 
         # Concatenate the tokenized sentences
         train_input_ids = torch.cat((train_encodings_1['input_ids'], train_encodings_2['input_ids']), dim=1)
@@ -79,16 +79,13 @@ def main(config):
 
         mse_loss = nn.MSELoss()
         optimizer = torch.optim.Adam(model.parameters(), lr=config["lr"])
-        lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10)
+        lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1)
 
         for epoch in range(config["epochs"]):
             print(f"Epoch {epoch}")
             model.train()
             total_loss = 0
             for i, batch in enumerate(sts_train_iterator):
-                if i >= 5:
-                    break
-                print("Training")
                 optimizer.zero_grad()
                 input_ids, attention_mask, labels = batch
                 input_ids, attention_mask, labels = input_ids.to(device), attention_mask.to(device), labels.to(device)
@@ -96,8 +93,8 @@ def main(config):
                 loss = mse_loss(outputs, labels)
                 loss.backward()
                 optimizer.step()
-                lr_scheduler.step()
                 total_loss += loss.item()
+            lr_scheduler.step()
             train_loss = total_loss / len(sts_train_iterator)
             print(f"Train loss: {train_loss}")
             wandb.log({"train_loss": train_loss})
@@ -106,25 +103,29 @@ def main(config):
             with torch.no_grad():
                 total_loss = 0
                 for i, batch in enumerate(sts_test_iterator):
-                    if i >= 5:
-                        break
-                    print("Testing")
                     input_ids, attention_mask, labels = batch
                     input_ids, attention_mask, labels = input_ids.to(device), attention_mask.to(device), labels.to(device)
                     outputs = model(input_ids=input_ids, attention_mask=attention_mask)
                     loss = mse_loss(outputs, labels)
                     total_loss += loss.item()
-                test_loss = total_loss / len(sts_test_iterator)
-                print(f"Test loss: {test_loss}")
-                wandb.log({"test_loss": test_loss})
+            test_loss = total_loss / len(sts_test_iterator)
+            print(f"Test loss: {test_loss}")
+            wandb.log({"test_loss": test_loss})
 
     if config["task"] == "sentiment":
         model = AutoModelForSequenceClassification.from_pretrained(config["model_type"], num_labels=3)
         model.to(device)
         cls_dataset = load_dataset("csv", delimiter='\t', data_files={"train": "data-sent/csfd-train.tsv",
                                                                       "test": "data-sent/csfd-test.tsv"})
-        cls_train_iterator = DataLoader(cls_dataset['train'], batch_size=config['batch_size'])
-        cls_test_iterator = DataLoader(cls_dataset['test'], batch_size=config['batch_size'])
+
+        train_encodings = tokenizer(cls_dataset['train']['text'], return_tensors="pt", padding=True, truncation=True, max_length=config['seq_len'])
+        test_encodings = tokenizer(cls_dataset['test']['text'], return_tensors="pt", padding=True, truncation=True, max_length=config['seq_len'])
+
+        cls_dataset['train'] = TensorDataset(train_encodings['input_ids'], train_encodings['attention_mask'], torch.tensor(cls_dataset['train']['label']))
+        cls_dataset['test'] = TensorDataset(test_encodings['input_ids'], test_encodings['attention_mask'], torch.tensor(cls_dataset['test']['label']))
+
+        cls_train_iterator = DataLoader(cls_dataset['train'], batch_size=config['batch_size'], shuffle=True)
+        cls_test_iterator = DataLoader(cls_dataset['test'], batch_size=config['batch_size'], shuffle=True)
 
         cross_entropy = nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(model.parameters(), lr=config["lr"])
@@ -137,24 +138,23 @@ def main(config):
             correct = 0
             total = 0
             for i, batch in enumerate(cls_train_iterator):
-                # if i >= 5:
-                #     break
-                # print("Training")
-                texts = batch["text"]
-                labels = batch["label"].to(device)
+                if i >= 5:
+                    break
+                print("Training")
                 optimizer.zero_grad()
-                encoded = tokenizer(texts, return_tensors="pt", padding=True, truncation=True, max_length=100).to(device)
-                output = model(**encoded)
+                input_ids, attention_mask, labels = batch
+                input_ids, attention_mask, labels = input_ids.to(device), attention_mask.to(device), labels.to(device)
+                output = model(input_ids=input_ids, attention_mask=attention_mask)
                 loss = cross_entropy(output.logits, labels.to(device))
                 loss.backward()
                 optimizer.step()
-                lr_scheduler.step()
                 predictions = torch.argmax(output.logits, dim=1)
                 correct += (predictions == labels).sum().item()
                 total += len(labels)
                 total_loss += loss.item()
+            lr_scheduler.step()
             train_acc = correct / total
-            train_loss = total_loss / total
+            train_loss = total_loss / len(cls_train_iterator)
             print(f"Train loss: {train_loss}, Train acc: {train_acc}")
             wandb.log({"train_loss": train_loss, "train_acc": train_acc})
 
@@ -164,22 +164,21 @@ def main(config):
                 correct = 0
                 total = 0
                 for i, batch in enumerate(cls_test_iterator):
-                    # if i >= 5:
-                    #     break
-                    # print("Testing")
-                    texts = batch["text"]
-                    labels = batch["label"]
-                    encoded = tokenizer(texts, return_tensors="pt", padding=True, truncation=True, max_length=100).to(device)
-                    output = model(**encoded)
+                    if i >= 5:
+                        break
+                    print("Testing")
+                    input_ids, attention_mask, labels = batch
+                    input_ids, attention_mask, labels = input_ids.to(device), attention_mask.to(device), labels.to(device)
+                    output = model(input_ids=input_ids, attention_mask=attention_mask)
                     predictions = torch.argmax(output.logits, dim=1)
                     loss = cross_entropy(output.logits, labels.to(device))
                     correct += (predictions == labels).sum().item()
                     total += len(labels)
                     total_loss += loss.item()
                 val_acc = correct / total
-                val_loss = total_loss / total
+                val_loss = total_loss / len(cls_test_iterator)
                 print(f"Val acc: {val_acc}, val loss: {val_loss}")
-                wandb.log({"test_acc": val_acc, "train_loss": val_loss})
+                wandb.log({"test_acc": val_acc, "test_loss": val_loss})
 
 
 if __name__ == '__main__':
@@ -189,7 +188,9 @@ if __name__ == '__main__':
     argparser.add_argument("--batch_size", type=int, default=16)
     argparser.add_argument("--lr", type=float, default=1e-5)
     argparser.add_argument("--epochs", type=int, default=10)
+    argparser.add_argument("--seq_len", type=int, default=100)
     config = argparser.parse_args()
+    config = vars(config)
     config = {
         # "task":"sts",     # < 0.65
         "task": "sentiment",  # > 0.75
