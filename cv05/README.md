@@ -172,6 +172,9 @@ The curves show the expected shapes for a well-trained model, with steady improv
 | sts            | 3.222 +- 0.032 | 0.501 +- 0.011     | 0.552 +- 0.027 | 0.503 +- 0.006 |
 | sentiment-csfd | 0.75 +- 0.002  | 0.840 +- 0.003     | 0.848 +- 0.001 | 0.846 +- 0.003 |
 
+All the models easily outperformed the baseline, this is especially good for the sentiment task, where previously
+none of the CNN architectures reached the 0.75 accuracy threshold.
+
 We run 5 experiments for each setup and present average and error.
 The baseline is taken from previous exercises in the semester. Please write details for the baseline
 ---
