@@ -1,6 +1,11 @@
 # KIV/ANLP assignment 01
+✅ 13
+
+❌ -0
+
 
 ## Implement Training Loop and Experiment with Hyper-Parameters
+
 
 ## Prerequisities
 

@@ -1,11 +1,19 @@
 # CV04 - Named Entity Recognition/Morphological Tagging
 
+
+
+✅ 15
+👍 3
+❌ -5 -2
+
+18 celkem
+
+
 **Deadline**: 20. 11. 2023 23:59:59
 
 **Maximum points:** 20 + 5 (bonus)
 
-**Contact:** Jan Pašek (pasekj@ntis.zcu.cz) - get in touch with me in case of any problems, but try not to leave
-the problems for the weekends (I can't promise I'll respond during the weekend). Feel free to drop me an email or come to the next lesson
+**Contact:**  Feel free to drop me an email or come to the next lesson
 to discuss your problems. I'm also open to schedule online session in the meantime if you need
 any support.
 
@@ -53,7 +61,7 @@ Analyse the dataset - write the results into the discussion (secion 1). Answer a
 5. Count statistics about class distribution in dataset (train/dev/test) for the individual datasets.
 6. Based on the statistic from the questions above - are the individual datasets balanced or unbalanced? In case at least one of the dataset is unbalanced, are there any implications for the model/solution or is there anything we should be aware of?
 
-**[3 pt]** - Evaluation method: manually (each question 0.5pt)
+**[3 pt]** - Evaluation method: manually (each question 0.5pt) ✅
 
 ### CKPT2 (RNN Model)
 *Note: During the whole implementation, preserve the attribute/variable names if suggested (e.g. `self.__dropout_layer = ...` -> `self.__dropout_layer = torch.nn.Dropout(p=self.__dropout_prob)`. If you change the name of such variables, the tests will be failing.*
@@ -81,7 +89,7 @@ Analyse the dataset - write the results into the discussion (secion 1). Answer a
     - Compute loss and return instance of `TokenClassifierOutput` (*Note: the loss is computed in the forward pass and returned in the `TokenClassifierOutput` to unify interface of our custom models with HuggingFace models*.)
 3. Do a step by step debugging to ensure that the implementation works as expected - check the dimensionality of tensors flowing through the model (no points for that, but it is important for the experiments that the model works correctly)
 
-**[4 pt]** - Evaluation method: passing unittests for ckpt2 (3.5pt), discussion manually (0.5pt)
+**[4 pt]** - Evaluation method: passing unittests for ckpt2 (3.5pt), discussion manually (0.5pt) ✅
 
 ### CKPT3 (LSTM Model)
 *Note: During the whole implementation, preserve the attribute/variable names if suggested (e.g. `self.__dropout_layer = ...` -> `self.__dropout_layer = torch.nn.Dropout(p=self.__dropout_prob)`. If you change the name of such variables, the tests will be failing.*
@@ -107,7 +115,7 @@ Analyse the dataset - write the results into the discussion (secion 1). Answer a
     - Compute loss and return instance of `TokenClassifierOutput` (*Note: the loss is computed in the forward pass and returned in the `TokenClassifierOutput` to unify interface of our custom models with HuggingFace models*.)
 3. Do a step by step debugging to ensure that the implementation works as expected - check the dimensionality of tensors flowing through the model (no points for that, but it is important for the experiments that the model works correctly)
 
-**[3 pt]** - Evaluation method: passing unittests for ckpt3 (2.5pt), discussion manually (0.5pt)
+**[3 pt]** - Evaluation method: passing unittests for ckpt3 (2.5pt), discussion manually (0.5pt) ✅
 
 
 ### CKPT4 (Freezing Parameters & L2 Regularization)
@@ -121,7 +129,7 @@ Analyse the dataset - write the results into the discussion (secion 1). Answer a
     - LSTM: regularize only the dense layer and classification head
 4. In the discussion (section 4) explain in which case do we want to freeze the embedding layer. Also discuss whether it is useful to freeze embedding layer in our case when we initialize the embedding layer randomly - would you expect the model to work well with the frozen randomly initialized embedding layer?
 
-**[3 pt]** - Evaluation method: passing unittest for ckpt4 (2pt), discussion manually (1pt)
+**[3 pt]** - Evaluation method: passing unittest for ckpt4 (2pt), discussion manually (1pt) ✅
 
 ### CKPT5 (Training loop & LR schedule)
 
@@ -133,7 +141,7 @@ Analyse the dataset - write the results into the discussion (secion 1). Answer a
     - The scheduler shall return number in [0, 1] - resulting LR used by the model is `training_args.learning_rate * lr_schedule()`
 3. In the discussion (section 5) discuss why such LR scheduler can help to improve results. Discuss both the warmup and decay separately.
 
-**[2 pt]** Evaluation method: passing unittests for ckpt5 (1pt), discussion manually (1pt)
+**[2 pt]** Evaluation method: passing unittests for ckpt5 (1pt), discussion manually (1pt) ✅
 
 ### CKPT6 (Basic Experiments)
 
@@ -339,7 +347,7 @@ Analyse the dataset - write the results into the discussion (secion 1). Answer a
 4. Discussion for NER - compare results of the individual models and try to explain why the models achieve the results you observed. Specifically compare the results achieved with RNN/LSTM and CZERT/Slavic.
 5. Discussion for TAGGING - compare results of the individual models and try to explain why the models achieve the results you observed. Specifically compare the results achieved with RNN/LSTM and CZERT/Slavic.
 
-**[5 pt]** Evaluation method: passing unittests for ckpt6 (3pt), discussion manually (2pt) - it is not possible to get any points for the passing unittests if discussion is missing at this CKPT
+**[5 pt]** Evaluation method: passing unittests for ckpt6 (3pt), discussion manually (2pt) ❌ - it is not possible to get any points for the passing unittests if discussion is missing at this CKPT ❌
 
 ### CKPT7 (Extended experiments)
 
@@ -356,7 +364,7 @@ Analyse the dataset - write the results into the discussion (secion 1). Answer a
     - Does freezing the lower layers bring any benefits in term of results, speed of training, etc?
     - Does the BERT model work for Czech tasks? State the results and include a graph of eval metrics for the BERT model config for both tasks.
 
-**[5pt]** Evaluation method: passing unittests for ckpt7 (3pt), discussion manually (2pt)
+**[5pt]** Evaluation method: passing unittests for ckpt7 ✅(3pt), discussion manually (2pt) ❌
 
 ## Discussions
 
@@ -511,10 +519,12 @@ Warmup stabilizes training by preventing large, potentially destabilizing update
 Decay helps the model converge to a stable minimum, prevents oscillation around local minima.
 
 ### Section 6 - Basic Experiments Results
-
+❌
 [TODO]
 
 ### Section 7 - Extended Experiments Results (Bonus)
+
+❌
 
 [TODO] (optional)
 

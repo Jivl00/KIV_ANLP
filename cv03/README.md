@@ -1,5 +1,10 @@
 # KIV / ANLP Exercise 03
 
+✅ 20
+👍 +5
+❌ 0
+
+
 *Deadline to push results:* 2024-11-10 (San) 23:59:59
 
 *Maximum points:*
