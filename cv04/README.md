@@ -1,10 +1,9 @@
 # CV04 - Named Entity Recognition/Morphological Tagging
 
-
-
-✅ 15
-👍 3
-❌ -5 -2
+✅ 20
+👍 5
+❌ 
+💔 poor legend provided with charts
 
 18 celkem
 
@@ -347,7 +346,7 @@ Analyse the dataset - write the results into the discussion (secion 1). Answer a
 4. Discussion for NER - compare results of the individual models and try to explain why the models achieve the results you observed. Specifically compare the results achieved with RNN/LSTM and CZERT/Slavic.
 5. Discussion for TAGGING - compare results of the individual models and try to explain why the models achieve the results you observed. Specifically compare the results achieved with RNN/LSTM and CZERT/Slavic.
 
-**[5 pt]** Evaluation method: passing unittests for ckpt6 (3pt), discussion manually (2pt) ❌ - it is not possible to get any points for the passing unittests if discussion is missing at this CKPT ❌
+**[5 pt]** Evaluation method: passing unittests for ckpt6 (3pt), discussion manually (2pt) - it is not possible to get any points for the passing unittests if discussion is missing at this CKPT 
 
 ### CKPT7 (Extended experiments)
 
@@ -364,7 +363,7 @@ Analyse the dataset - write the results into the discussion (secion 1). Answer a
     - Does freezing the lower layers bring any benefits in term of results, speed of training, etc?
     - Does the BERT model work for Czech tasks? State the results and include a graph of eval metrics for the BERT model config for both tasks.
 
-**[5pt]** Evaluation method: passing unittests for ckpt7 ✅(3pt), discussion manually (2pt) ❌
+**[5pt]** Evaluation method: passing unittests for ckpt7 ✅(3pt), discussion manually (2pt) 
 
 ## Discussions
 
@@ -519,14 +518,158 @@ Warmup stabilizes training by preventing large, potentially destabilizing update
 Decay helps the model converge to a stable minimum, prevents oscillation around local minima.
 
 ### Section 6 - Basic Experiments Results
-❌
-[TODO]
+
+#### Discussion for NER
+
+As we can see both CZERT and Slavic models outperform RNN and LSTM models. This is expected as
+the pre-trained models had more data to learn from and were trained on a larger corpus (must be of course relevant).
+
+![par_all.svg](img%2Fpar_all.svg)
+
+The LSTM model was doing better than the RNN model - as expected.
+The RNN model, while capable of capturing sequential dependencies, often struggles with long-term dependencies due to the
+vanishing gradient problem. This can lead to suboptimal performance on tasks like NER, where context from distant tokens can be crucial.
+The LSTM model, with its gating mechanisms, is better equipped to handle long-term dependencies. This typically results in 
+better performance compared to RNNs on tasks requiring understanding of context over longer sequences.
+
+![NER1.svg](img%2FNER1.svg)
+
+As for the tuned hyperparameters, the `--no_bias` does not seem to have a significant impact on the model's performance.
+Models with `--no_bias:false` were slightly better 0.4549 vs 0.4526 on the test F1 score. Also, the trends in the graphs
+were almost identical.
+
+The learning rate `0.001` was better than `0.0001` for both models. It is likely that the higher learning rate allowed
+the model to converge faster.
+
+💔 poor labels -- I can't see what the colours mean. 
+
+![NER_lr.svg](img%2FNER_lr.svg)
+
+The L2 alpha `0.01` slightly worse than `0` for both models. This came as a surprise, as L2 regularization is typically
+used to prevent overfitting and improve generalization. It is possible that the L2 regularization was too strong? (but 0.0001 is quite low)
+
+![NER_l2.svg](img%2FNER_l2.svg)
+
+Below we can clearly see that the overfitting is present and therefore the L2 regularization should be used.
+
+![NER_l2loss.svg](img%2FNER_l2loss.svg)
+
+As mentioned both CZERT and Slavic models outperform RNN and LSTM models. CZERT, being a pre-trained transformer model
+specifically designed for the Czech language, leverages large amounts of pre-training data. This allows it to capture
+nuanced language patterns and context. Similar to CZERT, the Slavic model is pre-trained on Slavic languages, making it
+adept at understanding the linguistic characteristics of these languages. Its performance on NER tasks is expected to be 
+comparable to or slightly lower than CZERT, depending on the specific pre-training data and fine-tuning process.
+Results suggest that it is indeed the truth as the Slavic reached 0.85 F1 score on the test set and CZERT 0.86.
+However, the graphs below suggest that the CZERT was starting to overfit the training data - so its performance might
+be even better with better regularization.
+
+![NER_2.svg](img%2FNER_2.svg)
+
+![NER_2.1.svg](img%2FNER_2.1.svg)
+
+#### Discussion for TAGGING
+The scenario for the TAGGING task is similar to the NER task.
+The CZERT and Slavic models are having the best performance, this time closely followed by the LSTM model.
+In general all models are performing better on the TAGGING task than on the NER task.
+
+![TAG_all.svg](img%2FTAG_all.svg)
+
+Performance of the RNN model is again worse than the LSTM model. The LSTM model is better at capturing long-term dependencies,
+which is crucial for tasks like morphological tagging that require understanding of context over longer sequences.
+
+![TAG1.svg](img%2FTAG1.svg)
+
+The `--no_bias` hyperparameter does not seem to have a significant impact in this case either.
+As for the learning rate, the `0.001` was better than `0.0001` for both models. The difference was less significant than in the NER task.
+
+![TAG2.svg](img%2FTAG2.svg)
+
+The L2 alpha `0.01` was slightly worse than `0` for both models. In this case, I see no signs of overfitting, so the L2 regularization might not be necessary
+in this case.
+
+![TAG3.svg](img%2FTAG3.svg)
+
+![TAG4.svg](img%2FTAG4.svg)
+
+As for the CZERT and Slavic models, the results clearly indicate that both models were overfitting the training data.
+In the graphs below, the model are intentionally not grouped - so we can see that the shorter training time
+was sufficient - in some cases maybe even lesser epochs would be enough. As for the model themselves, the CZERT
+was again slightly better than the Slavic model. In this case, it is even more intuitive as the tagging task is
+in my opinion more related to the language itself than the NER task.
+
+![TAG_1.svg](img%2FTAG_1.svg)
+
+![TAG_2.svg](img%2FTAG_2.svg)
+
+![TAG_3.svg](img%2FTAG_3.svg)
+
 
 ### Section 7 - Extended Experiments Results (Bonus)
 
-❌
+-- Embedding layer freezing
 
-[TODO] (optional)
+Freezing the embedding layer did not have a significant impact on the model's performance.
+The model with frozen embeddings achieved a test F1 score of 0.8572, while the model with trainable embeddings achieved 
+a test F1 score of 0.856. This suggests that the embeddings already encode rich syntactic and semantic information, which 
+might be sufficient for the NER task.
+
+-- Freezing layers of the CZERT model + freeze embeddings
+
+The results suggest that the model benefits most from freezing the first two layers of the CZERT model,
+achieving a test F1 score of 0.86. Freezing more layers did not improve the model's performance, quite the contrary, 
+models with 4 and 6 frozen layers performed worse (0.85 and 0.84 F1 score) than the model with no frozen layers (0.857 F1 score).
+Freezing the first two layers likely helps in retaining the general language understanding captured during pre-training,
+which is useful for the NER task. However, freezing more layers might hinder the model's ability to adapt to the specific
+task, leading to decreased performance.
+
+![CZERT.svg](img%2FCZERT.svg)
+
+As for the combination with freezing the embeddings, it seems that freezing the embeddings is beneficial for all models 
+as before. The already stored information in the embeddings plus in the lower layers of the model helps the model to
+perform better - probably good generalization ability.
+
+-- BERT model - how well does a pre-trained model for English perform on a Czech tasks?
+
+As expected, the BERT model, pre-trained on English data, did not perform well on Czech tasks, especially when compared to
+the CZERT and Slavic models. However, the BERT model achieved results that were better than the RNN and LSTM models.
+As for the tuned hyperparameters - freezing the embeddings and freezing the lower layers of the model - the results were
+similar to the CZERT model. This has surprised me, as the BERT model was pre-trained on English data, and I would expect
+that the model would not be able to benefit from the pre-trained lower layers. In general, I was pleasantly surprised by the
+results of the BERT model on Czech tasks.
+
+![BERT.svg](img%2FBERT.svg)
+
+-- Does the model with frozen embeddings perform worse than the model with trainable embeddings?
+
+Models with frozen embeddings performed better than models with trainable embeddings in all experiments.
+
+![d.svg](img%2Fd.svg)
+
+Freezing the embeddings is beneficial because the pre-trained embeddings already encode rich syntactic and semantic information.
+This helps the model maintain a strong foundation of language understanding, which is useful for both NER and TAGGING.
+When embeddings are frozen, the model can leverage this pre-existing knowledge without altering it, leading to better 
+performance. Additionally, freezing embeddings reduces the number of parameters that need to be updated during training,
+which can help prevent overfitting and improve generalization, especially when the training data is limited (not the case here
+especially for the tagging task).
+
+-- Do you see any result improvement/impairment when freezing the lower layers of the CZERT model?
+
+Yes, freezing the 2 lower layers of the CZERT model improved the model's performance, while freezing more layers impaired the model's performance.
+(see above)
+
+-- Does freezing the lower layers bring any benefits in term of results, speed of training, etc?
+
+Partially answered above. As for the speed of training, I would expect that freezing the lower layers would speed up training
+as fewer parameters need to be updated. The picture below shows that it might not be true, but those were just some extreme cases
+(I don't even remember making those experiments). Without the extreme values, the speed of training was similar for all cases,
+but small trends can be seen.
+
+![dd.svg](img%2Fdd.svg)
+
+-- Does the BERT model work for Czech tasks? State the results and include a graph of eval metrics for the BERT model config for both tasks.
+
+Answered above.
+
 
 ## Questions to think about (test preparation, better understanding):
 
